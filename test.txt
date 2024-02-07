@@ -1,0 +1,209 @@
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <windows.h>
+
+typedef char String255[256];
+typedef char String63[64];
+typedef char String31[32];
+typedef char String15[16];
+
+typedef int ErrorInt;
+struct Passenger {
+    String255 dropOffPoint;
+    String63 name;
+    time_t currentDate;
+    int idNumber;
+    int timeOfTrip;
+};
+
+
+/**
+ * @brief Clears the input for anything not a new line.
+ * 
+ */
+void 
+clearInput(){
+    while (getchar() != '\n'); // Get character while its not a new line and do nothing.
+}
+
+/*
+@brief Colors the screen of the console.
+
+@param foregroundColor char of first letter of the color for text.
+@param backgroundColor char of first letter of the color for background.
+@return void
+*/
+void colorText(String15 foregroundColor, String15 backgroundColor)
+{
+    // nColorId is based on Registry key on my laptop in Computer\HKEY_CURRENT_USER\Console\ColorTable##
+    int colorIdForeground = 0, colorIdBackground = 0;
+    HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE); // Gets the id for the stream of STDOUT or console
+
+    if (strcmp(foregroundColor, "red") == 0){
+        colorIdForeground = 12;
+    } else if (strcmp(foregroundColor, "yellow") == 0) {
+        colorIdForeground = 6;
+    } else if (strcmp(foregroundColor, "cyan") == 0) {
+        colorIdForeground = 11;
+    } else if (strcmp(foregroundColor, "purple") == 0) {
+        colorIdForeground = 13;
+    } else {
+        colorIdForeground = 15;
+    }
+    
+    if (strcmp(foregroundColor, "red") == 0){
+        colorIdBackground = 12;
+    } else if (strcmp(foregroundColor, "yellow") == 0) {
+        colorIdBackground = 6;
+    } else if (strcmp(foregroundColor, "cyan") == 0) {
+        colorIdBackground = 11;
+    } else if (strcmp(foregroundColor, "purple") == 0) {
+        colorIdBackground = 13;
+    } else if (strcmp(foregroundColor, "green") == 0) {
+        colorIdBackground = 2;
+    } else {
+        colorIdBackground = 0;
+    }
+    SetConsoleTextAttribute(hConsoleOutput, colorIdBackground * 16 + colorIdForeground); // STD_OUTPUT HANDLE means a stream/connection for applications to use output console
+}
+
+/**
+ * @brief Promts the user for a string. If the given does not fit into given size of the string, send error and repromt again.
+ * 
+ * @param pInput Pointer to the string to be assigned. 
+ * @param size Maximum size of the string.
+ * @param errorMessage Pointer to the Error message to be given to the console.
+ */
+void 
+repeatGetString(char *pInput, int size, char *errorMessage){
+    int isIncorrectInput = 1;
+    int dataTypes;
+    char stringFormat[11];
+    char closingChar;
+
+    switch(size) {
+        case 255:
+            strcpy(stringFormat, "%255[^\n]%c");
+            break;
+        case 63:
+            strcpy(stringFormat, "%63[^\n]%c");
+            break;
+        case 15:
+            strcpy(stringFormat, "%15[^\n]%c");
+            break;
+    }
+
+    do {
+        dataTypes = scanf(stringFormat, pInput, &closingChar);
+        if(dataTypes != 2 || closingChar != '\n'){
+            clearInput();
+            printf("%s\n", errorMessage);
+        }
+        else
+            isIncorrectInput = 0;
+    }
+    while(isIncorrectInput);
+}
+
+/**
+ * @brief Promts the user for an integer. If the given is not an integer, send error and repromt again.
+ * 
+ * @param pInput Pointer to the integer to be assigned.
+ * @param errorMessage Pointer to the Error message to be given to the console.
+ */
+void
+repeatGetInteger(int *pInput, String63 errorMessage){
+    int isIncorrectInput = 1;
+    char closingChar;
+
+    do {
+        if(scanf("%d%c", pInput, &closingChar) != 2 || closingChar != '\n'){
+            clearInput();
+            printf("%s\n", errorMessage);
+        }
+        else
+            isIncorrectInput = 0;
+    }
+    while(isIncorrectInput);
+}
+/**
+ * @brief 
+ * 
+ * @param requiredGraphicId Name of the graphic to render.
+ * @return ErrorInt 0: No error, 1: EOF error, 2: Misalignment error.
+ */
+ErrorInt 
+printGraphics(String15 requiredGraphicId){
+    ErrorInt errorCode = 0;
+    String15 stringGraphicHeight;
+    String15 scannedGraphicId;
+    String15 prevGraphicHeight;
+    String15 prevGraphicId;
+    String255 graphicsData;
+    FILE *graphicsFile;
+
+    char idScanned;
+    int graphicHeight = 0;
+    int haveNotFoundGraphic = 1;
+    int gLine;
+    // 
+    int isEndOfFile = 0;
+    int isPreviousMetadataSame = 0;
+    int isSameGraphicId = 0;
+
+    graphicsFile = fopen("graphicsFile.txt", "r");
+    do {
+        //Format: "ID:<graphic id>, <height of graphic>;"
+        idScanned = fscanf(graphicsFile, "ID:%15[^,], %[^;];\n", scannedGraphicId, &stringGraphicHeight);
+
+        // printf("Scanned Id: %s, Height: %s\n", scannedGraphicId, stringGraphicHeight);
+        
+        isEndOfFile = idScanned == EOF;
+        isPreviousMetadataSame = strcmp(prevGraphicHeight, stringGraphicHeight) == 0 && 
+                                 strcmp(prevGraphicId, scannedGraphicId) == 0;
+        isSameGraphicId = strcmp(scannedGraphicId, requiredGraphicId) == 0;
+        graphicHeight = atoi(stringGraphicHeight); // converts strings into integer when possible.
+
+        haveNotFoundGraphic = 0; // assume its an error
+
+        if (isEndOfFile) {
+            printf("Program Error: EOF. Graphics Not found.\n");
+            errorCode = 1;
+        } else if (isPreviousMetadataSame) {
+            printf("Program Error: Misalignment. Next Graphics Metadata not found.");
+            errorCode = 2;
+        } else if (isSameGraphicId) {
+            for (gLine = 0; gLine < graphicHeight; gLine++) {
+                fgets(graphicsData, 256, graphicsFile);
+                printf("%s", graphicsData);
+            }
+        } else {
+            haveNotFoundGraphic = 1;
+        }
+
+        for (int gLine = 0; gLine < graphicHeight; gLine++) 
+            fgets(graphicsData, 256, graphicsFile);
+        
+        strcpy(prevGraphicHeight, stringGraphicHeight);
+        strcpy(prevGraphicId, scannedGraphicId);
+    }
+    while(haveNotFoundGraphic);
+    fclose(graphicsFile);
+    return errorCode;
+}
+
+void userMenu(){
+    String15 userChoice;
+    String63 wrongChoice = "Please type recognizable inputs!";
+    repeatGetString(userChoice, 15, wrongChoice);
+}
+
+void passengerMenu(){
+
+}
+
+void adminMenu(){
+
+}
