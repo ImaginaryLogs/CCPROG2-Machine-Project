@@ -14,6 +14,7 @@ typedef char input;
 int main ()
 {
     //started on Feb 10, 2024
+    //1st finish: Feb 18, 2024                                                                                                                                                    
 
     
     input main, user, admin;
