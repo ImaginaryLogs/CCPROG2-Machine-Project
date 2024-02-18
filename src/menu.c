@@ -14,7 +14,6 @@ typedef char input;
 int main ()
 {
     //started on Feb 10, 2024
-    //1st finish: Feb 18, 2024                                                                                                                                                    
 
     
     input main, user, admin;
@@ -46,7 +45,7 @@ int main ()
                             temp code for admin menu
                             
                             if (strcmp(pass, realPass) == 0) {
-                                printf("Admin Menu\n");
+                                printf("Access Granted\n");
                                 printf("a. View Passengers\n");
                                 printf("b. View Passenger Count at Stops\n");
                                 printf("c. View Passenger Information\n");
@@ -128,9 +127,19 @@ int main ()
                                             printf("Inavlid input, please select again\n");
                                             break;
 
-                            } while (admin != 'g')
-                            */
+                                } while (admin != 'g')
+                            } else {
+                                int attempt --;
 
+                                if (attempt > 0) {
+                                    printf("Invalid password, please try again");
+                                }
+                                else {
+                                    printf("Too many attempts... you are locked out");
+                                }
+                            } 
+                        }
+                         */
                             break;
                             
                         case 'b':
@@ -140,14 +149,15 @@ int main ()
                             printf("Invalid input, please select again.\n");
                             break;
                     }
-                } while (admin != 'b');
+                } 
+                    while (admin != 'b');
                 break;
                 
             case 'b':
                 do {
                     printf("Passnger Menu\n");
                     printf("a. Search for Trip\n");
-                    printf("b. Go Back\n"); //go back to main manu
+                    printf("b. Go Back\n"); 
                     scanf("%c", &user);
                     
                     switch (user) {
@@ -179,11 +189,7 @@ int main ()
                             break;
                     }
                 } while (user != 'b');
-                
                 break;
-                
-                
-                
                 
             case 'c':
                 printf("Exiting...\n");
