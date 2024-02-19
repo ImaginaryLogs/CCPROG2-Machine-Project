@@ -20,23 +20,20 @@ void adminMenu()
     input pass[256];
     input realPass[256] = "Admin123"; // to be changed
 
-    do
-    {
+    do {
         printf("Admin Menu\n");
         printf("a. Proceed to Admin Options\n");
         printf("b. Go Back\n");
         scanf("%c", &admin);
 
-        switch (admin)
-        {
+        switch (admin) {
         case 'a':
             printf("Enter Password: ");
             scanf("%s", pass);
 
             // temp code for admin menu
 
-            if (strcmp(pass, realPass) == 0)
-            {
+            if (strcmp(pass, realPass) == 0) {
                 printf("Access Granted\n");
                 printf("a. View Passengers\n");
                 printf("b. View Passenger Count at Stops\n");
@@ -141,8 +138,7 @@ void adminMenu()
                 break;
             }
         }
-        while (admin != 'b')
-            ;
+        while (admin != 'b');
     }
 }
 
@@ -151,15 +147,13 @@ void passngerMenu()
     // added on Feb 19, 2024
     input user;
 
-    do
-    {
+    do {
         printf("Passnger Menu\n");
         printf("a. Search for Trip\n");
         printf("b. Go Back\n");
         scanf("%c", &user);
 
-        switch (user)
-        {
+        switch (user) {
         case 'a':
             printf("Enter Trip Number: ");
             scanf("%s", tripNo);
@@ -196,16 +190,14 @@ int main()
 
     input main;
 
-    do
-    {
+    do {
         printf("--- MAIN MENU ---\n"); // AYUSIN KO TOH DAPAT MAS MAGING AESTHETIC #ASCII (lol paturo pls)
         printf("a. Admin\n");
         printf("b. Passenger\n");
         printf("c. Exit\n");
         scanf("%c", &main);
 
-        switch (main)
-        {
+        switch (main) {
         case 'a':
             adminMenu;
             break;
