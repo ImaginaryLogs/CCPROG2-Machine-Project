@@ -14,7 +14,7 @@ int testValues(char cInput1, char *strInput2, char *strInput3, char cInput4, cha
                             !strcmp(strInput3, "Cinco") &&
                             cInput4 == 'S' &&
                             cInput5 == 'N';
-                            
+
     printf("#==// ");
     if (hasPassedConditions)
         printf("Passed\n\n");
@@ -29,8 +29,10 @@ int main(){
     ErrorInt errors = 0;
     String31 strInput2 = "";
     String31 strInput3 = "";
-
+    printf("Please input these sentences per line before testing:\n");
+    printf("Uno Dos\nTres Quatro\nCinco Seis\nSiete Ocho\nNueve\n");
     printf("#==\\\\ [1]: With the function\n");
+    printf("Insert the given names: \n");
     scanf("%c", &cInput1);
     clearInput();
     scanf("%s", strInput2);
@@ -40,16 +42,21 @@ int main(){
     scanf("%c", &cInput4);
     clearInput();
     scanf("%c", &cInput5);
+    clearInput();
 
     errors = !testValues(cInput1, strInput2, strInput3, cInput4, cInput5);
 
     printf("#==\\\\ [2]: Without the function\n");
-    scanf("%c ", &cInput1);
-    scanf("%s ", strInput2);
-    scanf("%s ", strInput3);
-    scanf("%c ", &cInput4);
-    scanf("%c ", &cInput5);
+    printf("Insert the given names: \n");
+    scanf("%c", &cInput1);
+    scanf("%s", strInput2);
+    scanf("%s", strInput3);
+    scanf("%c", &cInput4);
+    scanf("%c", &cInput5);
 
     errors = testValues(cInput1, strInput2, strInput3, cInput4, cInput5);
+    printf("If failed, it is as expected.\n");
 
+    printf("Errors: %d\n", errors);
+    return 0;
 }

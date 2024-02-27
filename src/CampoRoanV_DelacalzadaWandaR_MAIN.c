@@ -2,20 +2,21 @@
 
 /**
  * TODO Fill it functions accessible to a general user based on the diagram.
- *
+ * 
  */
 int 
 main()
 {
     char mainInput;
     printGraphics("Bus Express");
+
     do {
         repeatGetChar(&mainInput, "MainMenu", "\t> Choice: ", "Dear user please input again correctly.");
         printf("\n");
         system("cls");
         switch (mainInput) {
             case 'a':
-                menuAdmin2();
+                menuAdmin();
                 break;
             case 'b':
                 menuPassenger();

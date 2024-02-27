@@ -1,0 +1,50 @@
+Please input these sentences per line before testing:
+S
+Circle
+C
+123
+T
+#==|[1]: Input char
+#####
+#   #
+#   #
+#   #
+#####
+	> Shape:  
+#==|[2]: Input string
+_###_
+#   #
+#   #
+#   #
+ ###
+	> Shape:  
+[!] ERROR:
+	Wrong Data Type.
+
+_###_
+#   #
+#   #
+#   #
+ ###
+	> Shape:  
+#==|[3]: Input not char nor string
+#
+##
+# #
+#  #
+#####
+	> Shape:  
+[!] ERROR:
+	Wrong Data Type.
+
+#
+##
+# #
+#  #
+#####
+	> Shape:  
+Received Values:
+ 1 - S 
+ 1 - C 
+ 1 - T 
+Passes: 3

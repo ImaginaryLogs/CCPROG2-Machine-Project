@@ -3,3 +3,8 @@ Tres Quatro
 Cinco Seis
 Siete Ocho
 Nueve
+Uno Dos
+Tres Quatro
+Cinco Seis
+Siete Ocho
+Nueve
