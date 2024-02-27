@@ -1,4 +1,3 @@
-
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,10 +6,12 @@
 
 // |===| Define and Typedef |===================================|
 
-#define BACKGROUND_WHITE (BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED)
-#define BACKGROUND_BLACK (0x0)
-#define FOREGROUND_WHITE (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)
-#define FOREGROUND_BLACK (0x0)
+#define BG_WHITE (BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED)
+#define BG_BLACK (0x0)
+#define BG_RED BACKGROUND_RED
+#define FG_RED FOREGROUND_RED
+#define FG_WHITE (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)
+
 
 typedef int ErrorInt;
 
@@ -43,7 +44,8 @@ clearInput(){
 /**
  * @brief Prints a single text statement with color, and returns to white and black.
  * 
- * @param nCOLOR Integer code for colors defined by a windows.h macro 
+ * @param nCOLOR Integer code for colors defined by a windows.h macro
+ * @param strInput String to be printed in color
  * Precondition: Given nColor is defined by MACRO
  */
 void
@@ -51,61 +53,24 @@ printSingleColorText(int nColor, char *strInput){
     HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsoleOutput, nColor);
     printf(strInput);
-    SetConsoleTextAttribute(hConsoleOutput, FOREGROUND_WHITE | BACKGROUND_BLACK);
+    SetConsoleTextAttribute(hConsoleOutput, FG_WHITE | BG_BLACK);
     printf("\n");
 }
 
 /**
- * @brief Promts the user for a string. If the given does not fit into given size of the string, send error and repromt again.
+ * @brief Prints an Error message.
  * 
- * @param pInput Pointer to the string to be assigned. 
- * @param size Maximum size of the string.
- * @param errorMessage Pointer to the Error message to be given to the console.
- */
-void 
-repeatGetString(char *pInput, int size, char *errorMessage){
-    int isIncorrectInput = 1;
-    int dataTypes;
-    char closingChar;
-    char stringFormat[12] = "%";
-    char stringSize[5] = {""};
-
-    itoa(size, stringSize, 10);
-    strcat(stringFormat, stringSize);
-    strcat(stringFormat, "[^\n]%c");
-
-    do {
-        dataTypes = scanf(stringFormat, pInput, &closingChar);
-        if (dataTypes != 2 || closingChar != '\n') {
-            clearInput();
-            printf("%s\n", errorMessage);
-        }
-        else
-            isIncorrectInput = 0;
-    }
-    while(isIncorrectInput);
-}
-
-/**
- * @brief Promts the user for an integer. If the given is not an integer, send error and repromt again.
- * 
- * @param pInput Pointer to the integer to be assigned.
- * @param errorMessage Pointer to the Error message to be given to the console.
+ * @param *errorMessage Error message to be sent to the console.
  */
 void
-repeatGetInteger(int *pInput, String63 errorMessage){
-    int isIncorrectInput = 1;
-    char closingChar;
-
-    do {
-        if(scanf("%d%c", pInput, &closingChar) != 2 || closingChar != '\n'){
-            clearInput();
-            printf("%s\n", errorMessage);
-        }
-        else
-            isIncorrectInput = 0;
-    }
-    while(isIncorrectInput);
+printErrorMessage(char *errorMessage){
+    HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsoleOutput, FG_RED | FOREGROUND_INTENSITY);
+    printf("\n[!] ERROR:\n");
+    SetConsoleTextAttribute(hConsoleOutput, FG_RED);
+    printf("\t%s\n", errorMessage);
+    SetConsoleTextAttribute(hConsoleOutput, FG_WHITE | BG_BLACK);
+    printf("\n");
 }
 
 /**
@@ -116,7 +81,7 @@ repeatGetInteger(int *pInput, String63 errorMessage){
  * Pre-condition: Given graphicsID must be a valid one.
  */
 ErrorInt 
-printGraphics(String15 graphicsID){
+printGraphics(char *graphicsID){
     String255 graphicsData;
     String15 stringGraphicHeight;
     String15 scannedGraphicId;
@@ -186,6 +151,103 @@ printGraphics(String15 graphicsID){
     return errorCode;
 }
 
+/**
+ * @brief Promts the user for a string. If the given does not fit into given size of the string, send error and repromt again.
+ * 
+ * @param pInput Pointer to the string to be assigned. 
+ * @param size Maximum size of the string.
+ * @param choiceMenu[]: Pointer to the String of the Graphics to print.
+ * @param promtMessage[]: Pointer to the String that tells the user what to input.
+ * @param errorMessage[]: Pointer to the Error message to be given to the console.
+ */
+void 
+repeatGetString(char *pInput, int size, char choiceMenu[], char promtMessage[], char errorMessage[]){
+    int isIncorrectInput = 1;
+    int dataTypes;
+    char closingChar;
+    char stringFormat[13] = " %";
+    char stringSize[5] = {""};
+
+    itoa(size, stringSize, 10);
+    strcat(stringFormat, stringSize);
+    strcat(stringFormat, "[^\n]%c");
+
+    do {
+        printGraphics(choiceMenu);
+        printf("%s", promtMessage);
+        dataTypes = scanf(stringFormat, pInput, &closingChar);
+        if (dataTypes != 2 || closingChar != '\n') {
+            system("cls");
+            clearInput();
+            printErrorMessage(errorMessage);
+        }
+        else
+            isIncorrectInput = 0;
+    }
+    while(isIncorrectInput);
+}
+
+/**
+ * @brief Promts the user for an integer. If the given is not an integer, send error and repromt again.
+ * 
+ * @param pInput Pointer to the integer to be assigned.
+ * @param choiceMenu[]: Pointer to the String of the Graphics to print.
+ * @param promtMessage[]: Pointer to the String that tells the user what to input.
+ * @param errorMessage[]: Pointer to the Error message to be given to the console.
+ */
+void
+repeatGetInteger(int *pInput, char choiceMenu[], char promtMessage[], char errorMessage[]){
+    HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    int isIncorrectInput = 1;
+    char closingChar;
+
+    do {
+        printGraphics(choiceMenu);
+        printf("%s", promtMessage);
+        if(scanf("%d%c", pInput, &closingChar) != 2 || closingChar != '\n'){
+            system("cls");
+            clearInput();
+            printErrorMessage(errorMessage);
+        }
+        else
+            isIncorrectInput = 0;
+    }
+    while(isIncorrectInput);
+}
+
+
+/**
+ * @brief Promts the user for an char. If the given is not a char, send error and repromt again.
+ *  
+ * @param  *pInput: Pointer to the char to be assigned.
+ * @param  choiceMenu[]: Pointer to the String of the Graphics to print.
+ * @param  promtMessage[]: Pointer to the String that tells the user what to input.
+ * @param  errorMessage[]: Pointer to the Error message to be given to the console.
+ *
+*/
+void
+repeatGetChar(char *pInput, char choiceMenu[], char promtMessage[], char errorMessage[]){
+    HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    int isIncorrectInput = 1;
+    char closingChar;
+    do {
+        
+        printGraphics(choiceMenu);
+        printf("%s", promtMessage);
+        if(scanf("%c%c", pInput, &closingChar) != 2 || closingChar != '\n'){
+            system("cls");
+            clearInput();
+            printErrorMessage(errorMessage);
+        }
+        else
+            isIncorrectInput = 0;
+    }
+    while(isIncorrectInput);
+}
+
+
+
+
 // |===| Essential Functions Section |=====================|
 
 
@@ -233,7 +295,7 @@ void passengerMenu(){
  * @brief Contains the functions accessible to a regular user 
  * 
  */
-void adminMenu(){
+void menuAdmin(){
     printSingleColorText( BACKGROUND_GREEN | BACKGROUND_RED, "Entered Admin Space.");
     printf("\n");
 }

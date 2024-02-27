@@ -1,9 +1,4 @@
-ID:Hello, 5;
-H
-E
-L
-L
-O
+ID:None, 0;
 ID:Bus Express, 11;
 $$$$$$$\                            $$$$$$$$\                                                             
 $$  __$$\                           $$  _____|                                                            
@@ -28,3 +23,42 @@ $$ |  $$ |\$$$$$$$ |$$ | $$ | $$ |$$ |$$ |  $$ |
                                                 
                                                 
                                                 
+ID:MainMenu, 7;
+#=-<| MAIN MENU CMDS |>------------------>-=#
+|                                           |
+A    [a]: Admin Controls                    A
+#    [b]: Passenger Commands                #
+Y    [c]: Exit Program                      Y
+|                                           |
+#=-<------------------------------------->-=#
+ID:PassMenu, 6;
+#=-<| User Permission Required |>-------->-=#
+Y                                           Y
+|    Enter a Password to continue.          |
+|    Type "quit" to exit.                   |
+A                                           A
+#=-<------------------------------------->-=#
+ID:AdminMenu, 16;
+#=-<| Admin Commands |>-------------------<=#
+Y                                           Y
+|    Accessed elevated CMDS. Allowed        |
+|    to the ff. Admin Commands:             |
+A                                           A
+#=>---------------------------------------<=#
+Y                                           Y
+|    [a]: View Passengers                   |
+|    [b]: Count Passenger at Stops          |
+|    [c]: Check Passenger Info.             |
+|    [d]: Load Passenger Info.              |
+|    [e]: Search Passenger                  |
+|    [f]: Inform User                       |
+|    [g]: Go Back                           |
+A                                           A
+#=>---------------------------------------<=#
+ID:PassengerMenu, 6;
+#=-<| Passenger Commands |>---------------<=#
+|                                           |
+|    [a]: Search for Trip                   |
+|    [b]: Go Back                           |
+|                                           |
+#=>---------------------------------------<=#

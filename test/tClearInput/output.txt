@@ -1,0 +1,20 @@
+#==\ [1]: With the function:
+
+Received Values:
+ 1 - U 
+ 1 - Tres 
+ 1 - Cinco 
+ 1 - S 
+ 1 - N 
+#==// Passed
+
+#==\ [2]: Without the function:
+
+Received Values:
+ 0 - u 
+ 0 - eve 
+ 1 - Cinco 
+ 1 - S 
+ 1 - N 
+#==// Failed
+

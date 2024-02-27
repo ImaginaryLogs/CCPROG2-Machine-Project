@@ -2,38 +2,32 @@
 
 /**
  * TODO Fill it functions accessible to a general user based on the diagram.
- * TODO Password for admin.
- * TODO Use admin and passenger menu.
- * TODO Sign the certify agreement at the end
- * @brief Contains the functions accessible to a regular user 
- * 
+ *
  */
 int 
-main(){
-	HANDLE hConsoleScreen = GetStdHandle(STD_OUTPUT_HANDLE);
-	
-	// Replace all of this after if you want
-	int isInUserMenu = 1;
-	int isUsingApplication = 1;
-	int isAdmin = 0;
-	String15 input;
-	String31 errorMessage = "\nError! try again.\n";
-	ErrorInt isFound = 0;
-
-	while(isUsingApplication){
-		printf("Test");
-		isFound = printGraphics("Bus Express");
-		printf("\nErrors: %d\n", isFound);
-		printf("Input String: ");
-		repeatGetString(input, 15, errorMessage);
-		SetConsoleTextAttribute(hConsoleScreen, FOREGROUND_INTENSITY | BACKGROUND_RED);
-
-		printf("Output String: %s", input);
-		SetConsoleTextAttribute(hConsoleScreen, FOREGROUND_WHITE | BACKGROUND_BLACK);
-		printf("\n");
-
-		getchar();
-	}
-
-	return 0;
+main()
+{
+    char mainInput;
+    printGraphics("Bus Express");
+    do {
+        repeatGetChar(&mainInput, "MainMenu", "\t> Choice: ", "Dear user please input again correctly.");
+        printf("\n");
+        system("cls");
+        switch (mainInput) {
+            case 'a':
+                menuAdmin2();
+                break;
+            case 'b':
+                menuPassenger();
+                break;
+            case 'c':
+                printSingleColorText(FG_RED, "[x] Terminating...\n\tPress any button again.");
+                getchar();
+                break;
+            default: // loop back to main menu
+                printErrorMessage("Invalid command, please select again.\n");
+                break;
+        }
+    } while (mainInput != 'c');
+    return 0;
 }
