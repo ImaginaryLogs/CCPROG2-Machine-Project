@@ -6,7 +6,7 @@
 #include <sys/stat.h>
 /*
  * REFERENCES:
- * [1]: File Permissions: https://www.gnu.org/software/libc/manual/html_node/Permission-Bits.html
+ * 
  *  
  */
 
@@ -19,26 +19,6 @@
 #define FG_YELLOW (FOREGROUND_RED | FOREGROUND_GREEN)
 #define FG_WHITE (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)
 
-// [A]=| File Permissions of X in Read, Write, and Execute |===| Ref: [1]
-// File Permits of Owner
-#define FP_OWNER_READ 400
-#define FP_OWNER_WRITE 200
-#define FP_OWNER_EXEC 100
-#define FP_OWNER_ALL (FP_OWNER_READ | FP_OWNER_WRITE | FP_OWNER_EXEC)
-
-// File Permits of Users in a Group
-#define FP_GROUP_READ 40
-#define FP_GROUP_WRITE 20
-#define FP_GROUP_EXEC 10
-#define FP_GROUP_ALL (FP_GROUP_READ | FP_GROUP_WRITE | FP_GROUP_EXEC)
-
-// File Permits of Other User
-#define FP_OTHER_READ 4
-#define FP_OTHER_WRITE 2
-#define FP_OTHER_EXEC 1
-#define FP_OTHER_ALL (FP_OTHER_READ | FP_OTHER_WRITE | FP_OTHER_EXEC)
-
-#define FP_DEFAULT (FP_OWNER_ALL | FP_GROUP_ALL | FP_OTHER_ALL)
 
 typedef int ErrorInt;
 
@@ -47,14 +27,27 @@ typedef char String63[64];
 typedef char String31[32];
 typedef char String15[16];
 typedef char TripNo[7];
+struct TimeHM {
+    unsigned int hour;
+    unsigned int minute;
+};
+struct DateDMY {
+    unsigned int day;
+    unsigned int month;
+    unsigned int year;
+};
 
 struct Passenger {
+    String255 embarkationPoint;
     String255 dropOffPoint;
-    String63 name;
-    time_t currentDate;
-    int idNumber;
-    int timeOfTrip;
+    String255 passengerName;
+    TripNo tripNumber;
+    unsigned int idNumber;
+    struct DateDMY dateOfTrip;
+    struct TimeHM timeOfTrip;
+    unsigned int priorityNumber;
 };
+
 typedef struct Passenger Bus13[13];
 typedef struct Passenger Bus16[13];
 
@@ -94,9 +87,47 @@ void
 printErrorMessage(char *errorMessage){
     HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsoleOutput, FG_RED | FOREGROUND_INTENSITY);
-    printf("\n[!] ERROR:\n");
+    printf("\n#>==<|[X] ERROR: |>=========================#\n");
     SetConsoleTextAttribute(hConsoleOutput, FG_RED);
-    printf("\t%s\n", errorMessage);
+    printf("\n\t \n", errorMessage);
+    SetConsoleTextAttribute(hConsoleOutput, FG_RED | FOREGROUND_INTENSITY);
+    printf("\n#>-----------------------------------------<#\n");
+    SetConsoleTextAttribute(hConsoleOutput, FG_WHITE | BG_BLACK);
+    printf("\n");
+}
+
+void
+printWarningMessage(char *warningMessage){
+    HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsoleOutput, FG_YELLOW | FOREGROUND_INTENSITY);
+    printf("\n#>==<|[X] Warning: |>======================<#\n");
+    SetConsoleTextAttribute(hConsoleOutput, FG_YELLOW);
+    printf("\n\t%s\n", warningMessage);
+    SetConsoleTextAttribute(hConsoleOutput, FG_YELLOW | FOREGROUND_INTENSITY);
+    printf("\n#>-----------------------------------------<#\n");
+    SetConsoleTextAttribute(hConsoleOutput, FG_WHITE | BG_BLACK);
+    printf("\n");
+}
+
+void
+printPopUpMessage(char *headerString, int headerColor, char *bodyMessage){
+    HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    int i;
+    printf("\n");
+    SetConsoleTextAttribute(hConsoleOutput, headerColor | FOREGROUND_INTENSITY);
+    printf("#>==<|%s |>", headerString);
+    for(i = 0; i < 34 - strlen(headerString); i++){
+        printf("=");
+    }
+    printf("<#");
+    SetConsoleTextAttribute(hConsoleOutput, FG_WHITE | BG_BLACK);
+    printf("\n\n\t%s\n\n", bodyMessage);
+    SetConsoleTextAttribute(hConsoleOutput, headerColor | FOREGROUND_INTENSITY);
+    printf("#>---------");
+    for(i = 0; i < 32; i++){
+        printf("-");
+    }
+    printf("<#");
     SetConsoleTextAttribute(hConsoleOutput, FG_WHITE | BG_BLACK);
     printf("\n");
 }
@@ -105,16 +136,16 @@ printErrorMessage(char *errorMessage){
  * @brief Prints ASCII graphics found in ASCII_Art.txt
  * 
  * @param graphicsID Name of the graphic to render.
- * @return 0 if No error, 1 if File not Found, 2 if EOF, 3 - Misalignment
+ * @return 0 if No error, 1 if File not Found, 2 if EOF, 3 if Misalignment
  * Pre-condition: Given graphicsID must exist in ASCII_Art.txt.
  */
 ErrorInt 
 printGraphics(char *graphicsID){
     String255 graphicsData;
     
-    String63 strErrorEOF = "Program Error: EOF. Graphics Not found.\n";
-    String63 strErrorMisalign = "Program Error: Misalignment. Next Graphics Metadata not found.\n";
-
+    String63 strErrorEndOfFile = "PG Error: EOF. Graphics Not found.\n";
+    String63 strErrorMisalign = "PG Error: Misalignment. Next Graphics Metadata not found.\n";
+    String63 strErrorFileNotFound = "PG Error: File not found. \"ASCII_Art.txt\" not found.\n";
     String31 strMetadataFormat = "ID:%15[^,], %[^;];\n";
     String15 stringGraphicHeight;
     String15 scannedGraphicId;
@@ -138,7 +169,7 @@ printGraphics(char *graphicsID){
     fileGraphics = fopen("ASCII_Art.txt", "r");
     
     if (fileGraphics == NULL) {
-        printf("File not found\n");
+        printErrorMessage(strErrorFileNotFound);
         haveNotFoundGraphic = 0;
         errorCode = 1;
     }
@@ -160,7 +191,7 @@ printGraphics(char *graphicsID){
         haveNotFoundGraphic = 0; // Assume a closing statement like an error or found the graphics
        
         if (isEndOfFile) {
-            printErrorMessage(strErrorEOF);
+            printErrorMessage(strErrorEndOfFile);
             errorCode = 2;
         } else if (isPreviousMetadataSame) {
             printErrorMessage(strErrorMisalign);
@@ -280,6 +311,22 @@ repeatGetChar(char *pInput, char choiceMenuGraphicsCode[], char promtMessage[], 
     while(isIncorrectInput);
 }
 
+void
+StringfromDateDMY(char *dateString, struct DateDMY *date){
+    String15 strYear = "";
+    String15 strMonth = "";
+    String15 strDay = "";
+    itoa(date->year, strYear, 10);
+    itoa(date->month, strMonth, 10);
+    itoa(date->day, strDay, 10);
+
+    strcat(dateString, strYear);
+    dateString[strlen(dateString)] = '-';
+    strcat(dateString, strMonth);
+    dateString[strlen(dateString)] = '-';
+    strcat(dateString, strDay);
+}
+
 // |===| Essential Functions Section |=====================|
 
 void passwordMenu(int *isChoosingAdminCmds, int *isInputingPass, char *realPass){
@@ -301,6 +348,9 @@ void passwordMenu(int *isChoosingAdminCmds, int *isInputingPass, char *realPass)
         printErrorMessage(strWrongPass);
     }
 }
+
+
+
 /**
  * @brief  
  * @note   
@@ -314,29 +364,71 @@ void passwordMenu(int *isChoosingAdminCmds, int *isInputingPass, char *realPass)
  * @param  *dropOffPoint: 
  * @return
  */
-ErrorInt databaseBusWriter(TripNo TripNumber, char *EmbarkationPoint, char *PassengerName, 
-int idNumber, int priorityNumber, int date, int time, char *dropOffPoint){
+ErrorInt databaseBusAppender(struct DateDMY tripDate, struct Passenger newPassenger){
+    struct stat st = {0}; // struct stat is STATistcs of tripDatebase
+
+    FILE *pFileBusTrip;
+
+    String15 folderNameTrips = "TripsFolder";
+    String15 pathParentBack = "..\\";
+    String15 pathTrips = ".\\TripsFolder";
+    
+    String63 strErrorFolderNotFound = "Folder for Trips not yet created.\n\tCreating... /TripsFolder";
     ErrorInt nFileWriteState = 0;
-    ErrorInt nFolderExistanceState = 0;
 
-    struct stat st = {0}; // struct stat is STATistcs of 
-    
-    // Check if folder named "tripDatebase" by stat
-    if (stat("/tripDatabase", &st) == -1)
-        nFolderExistanceState = CreateDirectory("/tripDatabase", NULL); // CreateDirectory from windows.h
-    
-    if (nFolderExistanceState == -1)
-        return 1; // Error code for mkdir function or file creation.
+    String15 fileName = "Trip-";
+    String15 strToday = "";
+    String15 fileExtension = ".txt";
 
-    FILE *saveFile = fopen("mpSaveFile.txt", "w+");
+    int isFolderLost = FALSE;
+    int isFolderCreated = FALSE;
+    int cannotChangeDir = FALSE;
+    int isFileDoesNotExist = FALSE;
+
+    StringfromDateDMY(fileName, &tripDate);
+    strcat(fileName, fileExtension);
+    printf("Date: %s\n", fileName);
+
     
-    if (saveFile == NULL){   
-        nFileWriteState = 1;
-    } else {
-        fprintf(saveFile, "%s,", TripNumber);
+    // Check if folder name exist by stat
+    isFolderLost = stat(pathTrips, &st) == -1;
+    if (isFolderLost) {
+        isFolderCreated = CreateDirectory(folderNameTrips, NULL); // CreateDirectory from windows.h with Default File perms (NULL)
+        printErrorMessage(strErrorFolderNotFound);
     }
+    // Check if folder now exists
+    isFolderLost = stat(pathTrips, &st) == -1;
+    if (isFolderLost && !isFolderCreated)
+        return 1; // Error code 1 for File Creation error.
 
-    fclose(saveFile);
+    // Change dir
+    cannotChangeDir = chdir(pathTrips);
+    if (cannotChangeDir)
+        return 2; // Error code 2 for Change Directory error.
+
+    pFileBusTrip = fopen(fileName, "a");
+    
+    isFileDoesNotExist = pFileBusTrip == NULL;
+    if (isFileDoesNotExist) {   
+        nFileWriteState = 3; // Error code 3 for File Write error.
+    } else {
+        // Actual Passenger Append
+        fprintf(pFileBusTrip, "%s\n", newPassenger.tripNumber);
+        fprintf(pFileBusTrip, "%s\n", newPassenger.embarkationPoint);
+        fprintf(pFileBusTrip, "%s\n", newPassenger.passengerName);
+        fprintf(pFileBusTrip, "%u\n", newPassenger.idNumber);
+        fprintf(pFileBusTrip, "%u\n", newPassenger.priorityNumber);
+        fprintf(pFileBusTrip, "%u\n", newPassenger.dateOfTrip);
+        fprintf(pFileBusTrip, "%u\n", newPassenger.timeOfTrip);
+        fprintf(pFileBusTrip, "%s\n", newPassenger.dropOffPoint);
+    }
+    fclose(pFileBusTrip);
+
+    // Change directory back;
+    cannotChangeDir = chdir(pathParentBack);
+    if (cannotChangeDir)
+        return 2;
+    
     return nFileWriteState;
 }
 
