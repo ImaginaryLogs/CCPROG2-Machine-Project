@@ -24,22 +24,22 @@ $$ |  $$ |\$$$$$$$ |$$ | $$ | $$ |$$ |$$ |  $$ |
                                                 
                                                 
 ID:MainMenu, 7;
-#=-<| MAIN MENU CMDS |>------------------>-=#
-|                                           |
-A    [a]: Admin Controls                    A
-#    [b]: Passenger Commands                #
-Y    [c]: Exit Program                      Y
-|                                           |
-#=-<------------------------------------->-=#
+#>==<|[?] Main Menu |>======================#
+Y                                           Y
+|    [a]: Admin Controls                    |
+|    [b]: Passenger Commands                |
+|    [c]: Exit Program                      |
+A                                           A
+#>-----------------------------------------<#
 ID:PassMenu, 6;
-#=-<| User Permission Required |>-------->-=#
+#>==<|[!] User Permission Required |>======<#
 Y                                           Y
 |    Enter a Password to continue.          |
 |    Type "quit" to exit.                   |
 A                                           A
-#=-<------------------------------------->-=#
+#>-----------------------------------------<#
 ID:AdminMenu, 16;
-#=-<| Admin Commands |>-------------------<=#
+#>==<|[O] Admin Commands |>================<#
 Y                                           Y
 |    Accessed elevated CMDS. Allowed        |
 |    to the ff. Admin Commands:             |
@@ -54,11 +54,11 @@ Y                                           Y
 |    [f]: Inform User                       |
 |    [g]: Go Back                           |
 A                                           A
-#=>---------------------------------------<=#
+#>-----------------------------------------<#
 ID:PassengerMenu, 6;
-#=-<| Passenger Commands |>---------------<=#
+#>==<|[?] Passenger Commands |>------------<#
 |                                           |
 |    [a]: Search for Trip                   |
 |    [b]: Go Back                           |
 |                                           |
-#=>---------------------------------------<=#
+#>-----------------------------------------<#

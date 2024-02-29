@@ -3,6 +3,12 @@
 #include <stdlib.h>
 #include <time.h>
 #include <windows.h>
+#include <sys/stat.h>
+/*
+ * REFERENCES:
+ * [1]: File Permissions: https://www.gnu.org/software/libc/manual/html_node/Permission-Bits.html
+ *  
+ */
 
 // |===| Define and Typedef |===================================|
 
@@ -13,6 +19,26 @@
 #define FG_YELLOW (FOREGROUND_RED | FOREGROUND_GREEN)
 #define FG_WHITE (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)
 
+// [A]=| File Permissions of X in Read, Write, and Execute |===| Ref: [1]
+// File Permits of Owner
+#define FP_OWNER_READ 400
+#define FP_OWNER_WRITE 200
+#define FP_OWNER_EXEC 100
+#define FP_OWNER_ALL (FP_OWNER_READ | FP_OWNER_WRITE | FP_OWNER_EXEC)
+
+// File Permits of Users in a Group
+#define FP_GROUP_READ 40
+#define FP_GROUP_WRITE 20
+#define FP_GROUP_EXEC 10
+#define FP_GROUP_ALL (FP_GROUP_READ | FP_GROUP_WRITE | FP_GROUP_EXEC)
+
+// File Permits of Other User
+#define FP_OTHER_READ 4
+#define FP_OTHER_WRITE 2
+#define FP_OTHER_EXEC 1
+#define FP_OTHER_ALL (FP_OTHER_READ | FP_OTHER_WRITE | FP_OTHER_EXEC)
+
+#define FP_DEFAULT (FP_OWNER_ALL | FP_GROUP_ALL | FP_OTHER_ALL)
 
 typedef int ErrorInt;
 
@@ -85,10 +111,16 @@ printErrorMessage(char *errorMessage){
 ErrorInt 
 printGraphics(char *graphicsID){
     String255 graphicsData;
+    
+    String63 strErrorEOF = "Program Error: EOF. Graphics Not found.\n";
+    String63 strErrorMisalign = "Program Error: Misalignment. Next Graphics Metadata not found.\n";
+
+    String31 strMetadataFormat = "ID:%15[^,], %[^;];\n";
     String15 stringGraphicHeight;
     String15 scannedGraphicId;
     String15 prevGraphicHeight = "";
     String15 prevGraphicId = "";
+
     FILE *fileGraphics;
 
     ErrorInt errorCode = 0;
@@ -113,7 +145,7 @@ printGraphics(char *graphicsID){
 
     while(haveNotFoundGraphic){
         //Format: "ID:<graphic id>, <height of graphic>;"
-        idScanned = fscanf(fileGraphics, "ID:%15[^,], %[^;];\n", scannedGraphicId, &stringGraphicHeight);
+        idScanned = fscanf(fileGraphics, strMetadataFormat, scannedGraphicId, &stringGraphicHeight);
 
         // printf("Scanned Id: %s, Height: %s\n", scannedGraphicId, stringGraphicHeight);
         
@@ -128,12 +160,12 @@ printGraphics(char *graphicsID){
         haveNotFoundGraphic = 0; // Assume a closing statement like an error or found the graphics
        
         if (isEndOfFile) {
-            printErrorMessage("Program Error: EOF. Graphics Not found.\n");
+            printErrorMessage(strErrorEOF);
             errorCode = 2;
         } else if (isPreviousMetadataSame) {
-            printErrorMessage("Program Error: Misalignment. Next Graphics Metadata not found.\n");
-            printf("Height:  %s %s\n", prevGraphicHeight, stringGraphicHeight);
-            printf("Graphic: %s %s\n", prevGraphicId, scannedGraphicId);
+            printErrorMessage(strErrorMisalign);
+            printf("Height:  Previous: %s vs Next: %s\n", prevGraphicHeight, stringGraphicHeight);
+            printf("Graphic: Previous: %s vs Next: %s\n", prevGraphicId, scannedGraphicId);
             errorCode = 3;
         } else if (isSameGraphicId) {
             for (gLine = 0; gLine < graphicHeight; gLine++) {
@@ -145,7 +177,7 @@ printGraphics(char *graphicsID){
             haveNotFoundGraphic = 1;
         }
 
-        for (int gLine = 0; gLine < graphicHeight; gLine++) 
+        for (gLine = 0; gLine < graphicHeight; gLine++) 
             fgets(graphicsData, 256, fileGraphics);
         
         strcpy(prevGraphicHeight, stringGraphicHeight);
@@ -157,24 +189,24 @@ printGraphics(char *graphicsID){
 }
 
 /**
- * @brief Promts the user for a string. If the given does not fit into given size of the string, send error and repromt again.
+ * @brief Promts the user for a string. If the given does not fit into given length of the string, send error and repromt again.
  * 
  * @param pInput Pointer to the string to be assigned. 
- * @param size Maximum size of the string.
+ * @param length Length of the string format.
  * @param choiceMenuGraphicsCode[]: String pointer of the Graphics Code of the corresponding Graphics to print in ASCII_Art.txt.
  * @param promtMessage[]: String pointer of the prompt that tells the user what to input.
  * @param errorMessage[]: String pointer of the Error message to be given to the console.
  * Pre-condition: ASCII_Art.txt file exist and its metadata aligned, choiceMenuGraphicsCode given exist in ASCII_Art.txt, and promtMessage and errorMessage have been declared and initialized.
  */
 void 
-repeatGetString(char *pInput, int size, char choiceMenuGraphicsCode[], char promtMessage[], char errorMessage[]){
+repeatGetString(char *pInput, int length, char choiceMenuGraphicsCode[], char promtMessage[], char errorMessage[]){
     int isIncorrectInput = 1;
     int dataTypes;
     char closingChar;
     char stringFormat[13] = " %";
     char stringSize[5] = {""};
 
-    itoa(size, stringSize, 10);
+    itoa(length, stringSize, 10);
     strcat(stringFormat, stringSize);
     strcat(stringFormat, "[^\n]%c");
 
@@ -200,31 +232,25 @@ repeatGetString(char *pInput, int size, char choiceMenuGraphicsCode[], char prom
  * @param choiceMenuGraphicsCode[]: String pointer of the Graphics Code of the corresponding Graphics to print in ASCII_Art.txt.
  * @param promtMessage[]: String pointer of the prompt that tells the user what to input.
  * @param errorMessage[]: String pointer of the Error message to be given to the console.
-* Pre-condition: ASCII_Art.txt file exist and its metadata aligned, choiceMenuGraphicsCode given exist in ASCII_Art.txt, and promtMessage and errorMessage have been declared and initialized.
+* Pre-condition: Scanned Input is within the range of an Integer defined by the Computer. ASCII_Art.txt file exist and its metadata aligned, choiceMenuGraphicsCode given exist in ASCII_Art.txt, and promtMessage and errorMessage have been declared and initialized.
  */
 void
 repeatGetInteger(int *pInput, char choiceMenuGraphicsCode[], char promtMessage[], char errorMessage[]){
-    HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     int isIncorrectInput = 1;
     char closingChar;
-    long long int pInput2 = 0;
+ 
     do {
         printGraphics(choiceMenuGraphicsCode);
         printf("%s", promtMessage);
-        if (scanf("%lld%c", &pInput2, &closingChar) != 2 || closingChar != '\n'){
+        if (scanf("%d%c", pInput, &closingChar) != 2 || closingChar != '\n'){
             system("cls");
             clearInput();
-            printErrorMessage(errorMessage);
-        } else if (pInput2 < -2147483648 || pInput2 > 2147483647){
-            system("cls");
             printErrorMessage(errorMessage);
         } else
             isIncorrectInput = 0;
     }
     while(isIncorrectInput);
-    *pInput = pInput2;
 }
-
 
 /**
  * @brief Promts the user for an char. If the given is not a char, send error and repromt again.
@@ -236,8 +262,7 @@ repeatGetInteger(int *pInput, char choiceMenuGraphicsCode[], char promtMessage[]
  * Pre-condition: ASCII_Art.txt file exist and its metadata aligned, choiceMenuGraphicsCode given exist in ASCII_Art.txt, and promtMessage and errorMessage have been declared and initialized.
 */
 void
-repeatGetChar(char *pInput, char *choiceMenuGraphicsCode, char promtMessage[], char errorMessage[]){
-    HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+repeatGetChar(char *pInput, char choiceMenuGraphicsCode[], char promtMessage[], char errorMessage[]){
     int isIncorrectInput = 1;
     char closingChar;
     do {
@@ -255,15 +280,16 @@ repeatGetChar(char *pInput, char *choiceMenuGraphicsCode, char promtMessage[], c
     while(isIncorrectInput);
 }
 
-
 // |===| Essential Functions Section |=====================|
 
 void passwordMenu(int *isChoosingAdminCmds, int *isInputingPass, char *realPass){
     String255 inputPass;
     String63 errorMessage = "Error, not a string.";
-    char main;
+    String15 graphicCode = "PassMenu";
+    String15 prompt = "\t> Password: ";
+    String31 strWrongPass = "Wrong Input. Try again.";
 
-    repeatGetString(inputPass, 255, "PassMenu", "\t> Password: ", errorMessage);
+    repeatGetString(inputPass, 255, graphicCode, prompt, errorMessage);
     printf("\n");
 
     if (strcmp(inputPass, realPass) == 0) {
@@ -272,37 +298,81 @@ void passwordMenu(int *isChoosingAdminCmds, int *isInputingPass, char *realPass)
         *isInputingPass = FALSE;
     } else {
         system("cls");
-        printErrorMessage("Wrong Input. Try again.");
+        printErrorMessage(strWrongPass);
     }
+}
+/**
+ * @brief  
+ * @note   
+ * @param  TripNumber: 
+ * @param  *EmbarkationPoint: 
+ * @param  *PassengerName: 
+ * @param  idNumber: 
+ * @param  priorityNumber: 
+ * @param  date: 
+ * @param  time: 
+ * @param  *dropOffPoint: 
+ * @return
+ */
+ErrorInt databaseBusWriter(TripNo TripNumber, char *EmbarkationPoint, char *PassengerName, 
+int idNumber, int priorityNumber, int date, int time, char *dropOffPoint){
+    ErrorInt nFileWriteState = 0;
+    ErrorInt nFolderExistanceState = 0;
+
+    struct stat st = {0}; // struct stat is STATistcs of 
+    
+    // Check if folder named "tripDatebase" by stat
+    if (stat("/tripDatabase", &st) == -1)
+        nFolderExistanceState = CreateDirectory("/tripDatabase", NULL); // CreateDirectory from windows.h
+    
+    if (nFolderExistanceState == -1)
+        return 1; // Error code for mkdir function or file creation.
+
+    FILE *saveFile = fopen("mpSaveFile.txt", "w+");
+    
+    if (saveFile == NULL){   
+        nFileWriteState = 1;
+    } else {
+        fprintf(saveFile, "%s,", TripNumber);
+    }
+
+    fclose(saveFile);
+    return nFileWriteState;
 }
 
 // |===| PASSENGER CMD SECTION |=====================|
 
 void userEmbarkation(){
+    String63 strFiller = "User creates an embarkation trip.";
     printf("[O] Enter Trip Number: \n");
-    printSingleColorText(BACKGROUND_GREEN, "User creates an embarkation trip.");
+    printSingleColorText(BACKGROUND_GREEN, strFiller);
 }
 
 // |===| ADMIN CMD SECTION ==========================|
 
 void adminNoOfPassenger(){
-    printSingleColorText( FG_YELLOW, "Admin views a Trip's no. of Passenger");
+    String63 strFiller = "Admin views a Trip's no. of Passenger";
+    printSingleColorText( FG_YELLOW, strFiller);
 }
 
 void adminCountPassengerDropOff(){
-    printSingleColorText( FG_YELLOW, "Admin counts number of Passenger in a drop-off.");
+    String63 strFiller = "Admin counts number of Passenger in a drop-off.";
+    printSingleColorText( FG_YELLOW, strFiller);
 }
 
 void adminViewPassengerInfo(){
-    printSingleColorText( FG_YELLOW, "Admin views the passenger info.");
+    String63 strFiller = "Admin views the passenger info.";
+    printSingleColorText( FG_YELLOW, strFiller);
 }
 
 void adminSearchPassenger(){
-    printSingleColorText( FG_YELLOW, "Admin searches the passenger in a trip.");
+    String63 strFiller = "Admin searches the passenger in a trip.";
+    printSingleColorText( FG_YELLOW, strFiller);
 }
 
 void adminEmbarkation(){
-    printSingleColorText( FG_YELLOW, "Admin creates an embarkation trip.");
+    String63 strFiller = "Admin creates an embarkation trip.";
+    printSingleColorText( FG_YELLOW, strFiller);
 }
 
 // |===| MENU SECTION |=============================|
@@ -315,11 +385,11 @@ void adminEmbarkation(){
 void menuPassenger()
 {
     char inputPassMenu;
-    char tripNo[6];
     String63 errorMessage = "Dear Passenger, Please select the following valid cmds\n";
-
+    String15 graphicCode = "PassengerMenu";
+    String15 strPrompt = "\t> Action: ";
     do {
-        repeatGetChar(&inputPassMenu, "PassengerMenu", "\t> Action: ", errorMessage);
+        repeatGetChar(&inputPassMenu, graphicCode, strPrompt, errorMessage);
         switch(inputPassMenu) {
             case 'a':
                 userEmbarkation();
@@ -341,6 +411,8 @@ void menuPassenger()
 void menuAdmin(){
     String255 realPass = "Admin123"; // to be changed
     String63 errorMessage = "Please input a valid admin cmd.\n";
+    String15 graphicCode = "AdminMenu";
+    String15 strPrompt = "\t> Command: ";
     int isInputing = TRUE;
     int isChoosingAdminCmds = FALSE;
     char userInput;
@@ -351,7 +423,7 @@ void menuAdmin(){
 
     while (isChoosingAdminCmds){
         system("cls");
-        repeatGetChar(&userInput, "AdminMenu", "\t> Command: ", errorMessage);
+        repeatGetChar(&userInput, graphicCode, strPrompt, errorMessage);
         switch(userInput){
             case 'a':
                 adminNoOfPassenger();
