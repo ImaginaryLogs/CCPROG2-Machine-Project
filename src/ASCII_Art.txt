@@ -1,5 +1,5 @@
-ID:None, 0;
-ID:Bus Express, 11;
+ID:None 0
+ID:BusExpress 11
 $$$$$$$\                            $$$$$$$$\                                                             
 $$  __$$\                           $$  _____|                                                            
 $$ |  $$ |$$\   $$\  $$$$$$$\       $$ |      $$\   $$\  $$$$$$\   $$$$$$\   $$$$$$\   $$$$$$$\  $$$$$$$\ 
@@ -11,7 +11,7 @@ $$$$$$$  |\$$$$$$  |$$$$$$$  |      $$$$$$$$\ $$  /\$$\ $$$$$$$  |$$ |      \$$$
                                                         $$ |                                              
                                                         $$ |                                              
                                                         \__|                                              
-ID:Admin, 11;
+ID:Admin 11
  $$$$$$\        $$\               $$\           
 $$  __$$\       $$ |              \__|          
 $$ /  $$ | $$$$$$$ |$$$$$$\$$$$\  $$\ $$$$$$$\  
@@ -23,7 +23,7 @@ $$ |  $$ |\$$$$$$$ |$$ | $$ | $$ |$$ |$$ |  $$ |
                                                 
                                                 
                                                 
-ID:MainMenu, 7;
+ID:MainMenu 7;
 #>==<|[?] Main Menu |>======================#
 Y                                           Y
 |    [a]: Admin Controls                    |
@@ -31,14 +31,14 @@ Y                                           Y
 |    [c]: Exit Program                      |
 A                                           A
 #>-----------------------------------------<#
-ID:PassMenu, 6;
+ID:PassMenu 6;
 #>==<|[!] User Permission Required |>======<#
 Y                                           Y
 |    Enter a Password to continue.          |
 |    Type "quit" to exit.                   |
 A                                           A
 #>-----------------------------------------<#
-ID:AdminMenu, 16;
+ID:AdminMenu 16;
 #>==<|[O] Admin Commands |>================<#
 Y                                           Y
 |    Accessed elevated CMDS. Allowed        |
@@ -55,14 +55,14 @@ Y                                           Y
 |    [g]: Go Back                           |
 A                                           A
 #>-----------------------------------------<#
-ID:PassengerMenu, 6;
+ID:PassengerMenu 6;
 #>==<|[?] Passenger Commands |>------------<#
 |                                           |
 |    [a]: Search for Trip                   |
 |    [b]: Go Back                           |
 |                                           |
 #>-----------------------------------------<#
-ID:CountPassenger, 6;
+ID:CountPassenger 6;
 #>==<|[*] Count Passenger |>===============<#
 |                                           |
 |   Please input the Trip Number to Count.  |

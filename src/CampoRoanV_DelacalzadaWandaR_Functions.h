@@ -138,14 +138,14 @@ printPopUpMessage(char *headerString, int headerColor, char *bodyMessage){
  */
 ErrorInt 
 printGraphics(char *graphicsID){
-    String255 graphicsData;
+    String255 graphicsData = "";
     
     String63 strErrorEndOfFile = "PG Error: EOF. Graphics Not found.\n";
     String63 strErrorMisalign = "PG Error: Misalignment. Next Graphics Metadata not found.\n";
     String63 strErrorFileNotFound = "PG Error: File not found. \"ASCII_Art.txt\" not found.\n";
-    String31 strMetadataFormat = "ID:%15[^,], %[^;];\n";
-    String15 stringGraphicHeight;
-    String15 scannedGraphicId;
+    String31 strMetadataFormat = "ID:%s %s\n";
+    String15 stringGraphicHeight = "";
+    String15 scannedGraphicId = "";
     String15 prevGraphicHeight = "";
     String15 prevGraphicId = "";
 
@@ -173,7 +173,7 @@ printGraphics(char *graphicsID){
 
     while(haveNotFoundGraphic){
         //Format: "ID:<graphic id>, <height of graphic>;"
-        idScanned = fscanf(fileGraphics, strMetadataFormat, scannedGraphicId, &stringGraphicHeight);
+        idScanned = fscanf(fileGraphics, strMetadataFormat, scannedGraphicId, stringGraphicHeight);
 
         // printf("Scanned Id: %s, Height: %s\n", scannedGraphicId, stringGraphicHeight);
         
@@ -192,8 +192,8 @@ printGraphics(char *graphicsID){
             errorCode = 2;
         } else if (isPreviousMetadataSame) {
             printErrorMessage(strErrorMisalign);
-            printf("Height:  Previous: %s vs Next: %s\n", prevGraphicHeight, stringGraphicHeight);
-            printf("Graphic: Previous: %s vs Next: %s\n", prevGraphicId, scannedGraphicId);
+            printf("Height:  Previous: \"%s\" vs Next: \"%s\"\n", prevGraphicHeight, stringGraphicHeight);
+            printf("Graphic: Previous: \"%s\" vs Next: \"%s\"\n", prevGraphicId, scannedGraphicId);
             errorCode = 3;
         } else if (isSameGraphicId) {
             for (gLine = 0; gLine < graphicHeight; gLine++) {
@@ -590,7 +590,6 @@ tripFileGetBusTrip(struct DateDMY *tripDate, TripNo inputTrip, Bus16 BusTrip){
     FILE *pFileBusTrip;
     String255 temporaryBuffer = "";
     String15 fileName = "";
-    String15 strDateOfTrip = "";
     String15 strTimeOfTrip = "";
     String15 strPriorityNumber = "";
     String15 strIdNumber = "";
@@ -713,6 +712,7 @@ void userEmbarkation(){
 void adminNoOfPassenger(){
     String63 strFiller = "Admin views a Trip's no. of Passenger";
     printSingleColorText( FG_YELLOW, strFiller);
+
 }
 
 void adminCountPassengerDropOff(struct DateDMY *tripDate){
@@ -750,9 +750,6 @@ void adminCountPassengerDropOff(struct DateDMY *tripDate){
             }
         }
 
-        // for(i = 0; i < passengers; i++){
-        //     printPassenger(&BusTrip[i]);
-        // }
 
         for(i = 0; i < NoOfUniqueDropOffs; i++){
 
@@ -762,22 +759,52 @@ void adminCountPassengerDropOff(struct DateDMY *tripDate){
     }
 }
 
-void adminViewPassengerInfo(){
+void adminViewPassengerInfo(struct DateDMY *tripDate){
     String63 strFiller = "Admin views the passenger info.";
     printSingleColorText( FG_YELLOW, strFiller);
     Bus16 BusTrip;
+    String255 DropOffs[16];
+    int DropOffCounts[16];
+    int NoOfUniqueDropOffs = 0;
+    int passengers;
+    int i, j;
+    int foundSameDropOff;
+    int isDoneVieweing = FALSE;
+    TripNo inputTripNumber = ""; 
 
+    while (!isDoneVieweing){
+        repeatGetTripNo(inputTripNumber, "CountPassenger", "\n\t> Trip Number:", "Please input an existing trip. Type \"quit\" to exit.");
+        if (strcmp(inputTripNumber, "quit\n") == 0){
+            isDoneVieweing = TRUE;
+        } else {
+            printf("Trip: %s\n", inputTripNumber);    
+        
+            passengers = tripFileGetBusTrip(tripDate, inputTripNumber, BusTrip);
+            
+            if (passengers > 0) {
+                printf("Passengers of %s:\n", inputTripNumber);
+                printf("#=>----------------- - -\n");
+                for(i = 0; i < passengers; i++){
+                    printf("Y\tName: %s\n", BusTrip[i].passengerName);
+                    printf("|\tIDno: %d\n", BusTrip[i].idNumber);
+                    printf("A\tPriorityNo: %d\n", BusTrip[i].priorityNumber);
+                    printf("#=>----------------- - -\n");
+                }
+            } 
+        }
+    }
 }
 
 void adminSearchPassenger(){
     String63 strFiller = "Admin searches the passenger in a trip.";
     printSingleColorText( FG_YELLOW, strFiller);
-    
+
 }
 
 void adminEmbarkation(){
     String63 strFiller = "Admin creates an embarkation trip.";
     printSingleColorText( FG_YELLOW, strFiller);
+
 }
 
 // |===| MENU SECTION |=============================|
@@ -839,7 +866,7 @@ void menuAdmin(){
                 adminCountPassengerDropOff(&date);
                 break;
             case 'c':
-                adminViewPassengerInfo();
+                adminViewPassengerInfo(&date);
                 break;
             case 'd':
                 adminSearchPassenger();

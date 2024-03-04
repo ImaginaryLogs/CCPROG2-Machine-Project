@@ -9,7 +9,7 @@ int
 main()
 {
     char mainInput;
-    printGraphics("Bus Express");
+    printGraphics("BusExpress");
     do {
         repeatGetChar(&mainInput, "MainMenu", "\t> Choice: ", "Dear user please input again correctly.");
         printf("\n");
