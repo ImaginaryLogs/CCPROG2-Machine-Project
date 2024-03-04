@@ -46,16 +46,24 @@ struct DateDMY {
     unsigned int year;
 };
 
+struct NameField {
+    String63 lastName;
+    String63 firstName;
+    char midI;
+};
+
 struct Passenger {
     String255 embarkationPoint;
     String255 dropOffPoint;
-    String255 passengerName;
+    struct NameField passengerName;
     TripNo tripNumber;
     struct DateDMY dateOfTrip;
     struct TimeHM timeOfTrip;
     unsigned int idNumber;
     unsigned int priorityNumber;
 };
+
+
 
 typedef struct Passenger Bus16[13];
 
@@ -230,17 +238,20 @@ repeatGetTripNo(char *pInput, char choiceMenuGraphicsCode[], char *promtMessage,
         printGraphics(choiceMenuGraphicsCode);
         printf("%s", promtMessage);
         typeReturned = scanf("%d%c", &TripNumber, &closingChar);
-        if (TripNumber < 99 || TripNumber > 1000 || typeReturned != 2 || closingChar != '\n'){
+        if ((TripNumber < 99 && TripNumber > 0) || TripNumber < 0|| TripNumber > 1000 || typeReturned != 2 || closingChar != '\n'){
             system("cls");
             if (closingChar != '\n')
                 clearInput();
             printErrorMessage(errorMessage);
         } else {
             isIncorrectInput = 0;
-            strcat(pInput, "AE");
-            itoa(TripNumber, strTripNumber, 10);
-            strcat(pInput, strTripNumber);
-            printf("True! %d\n", TripNumber);
+            if (TripNumber == 0){
+                strcat(pInput, "quit");
+            } else {
+                strcat(pInput, "AE");
+                itoa(TripNumber, strTripNumber, 10);
+                strcat(pInput, strTripNumber);
+            }
         }
 
     } while(isIncorrectInput);
@@ -385,11 +396,12 @@ DateDMYfromString(struct DateDMY *date, char *dateString){
     return PROG_SUCCESS;
 }
 
-struct TimeHM TimeHMfromString( char *timeString){
+struct TimeHM 
+TimeHMfromString( char *timeString){
     struct TimeHM time;
     int i;
     int foundYearMonthSeparator;
-    int separator = timeString[1] == ' ' ? 1 : 2;
+    int separator = timeString[1] == ':' ? 1 : 2;
     String7 hour = "";
     strcpy(hour, timeString);
     hour[separator] = '\0';
@@ -407,10 +419,9 @@ isSubString(char *subStr, char *str){
     strLength = strlen(str);
     for(i = 0; i < strLength - subStrLength + 1 && !isFound; i++){
         nSameChars = 0;
-
-        for(j = 0; j < subStrLength; j++)
+        for(j = 0; j < subStrLength; j++){
             nSameChars += str[i + j] == subStr[j];
-
+        }
         if (nSameChars == subStrLength)
             isFound = 1;
     }
@@ -418,7 +429,8 @@ isSubString(char *subStr, char *str){
     return isFound;
 }
 
-struct DateDMY GetDateToday(){
+struct DateDMY 
+GetDateToday(){
     struct DateDMY today;
     struct tm Time;
     time_t t = time(NULL);
@@ -429,7 +441,8 @@ struct DateDMY GetDateToday(){
     return today;
 }
 
-struct TimeHM GetTimeHmToday(){
+struct TimeHM 
+GetTimeHmToday(){
     struct TimeHM timeNow;
     struct tm Time;
     time_t t = time(NULL);
@@ -445,21 +458,62 @@ removeNewLine(char *strInput){
         strInput[strlen(strInput)-1] = '\0';
 }
 
+struct NameField
+GetNameFromString(char *strName){
+    struct NameField output;
+    int fullNIndex;
+    int subNIndex;
+    int stringLength = strlen(strName);
+    int firstNameCeiling = 0;
+    int firstNameFloor = 0;
+    for(fullNIndex = 0; fullNIndex < stringLength; fullNIndex++){
+
+        if(strName[fullNIndex] == ',') {
+            firstNameFloor = fullNIndex + 2;
+            
+            for(subNIndex = 0; subNIndex < fullNIndex; subNIndex++)
+                output.lastName[subNIndex] = strName[subNIndex];
+            output.lastName[subNIndex] = '\0';
+            
+        } else if (strName[fullNIndex] == '.'){
+
+            firstNameCeiling = fullNIndex - 2;
+            output.midI = strName[fullNIndex - 1];
+
+            for(subNIndex = firstNameFloor; subNIndex < firstNameCeiling; subNIndex++)
+                output.firstName[subNIndex - firstNameFloor] = strName[subNIndex];
+
+            output.firstName[firstNameCeiling - firstNameFloor + 1] = '\0';
+        } else if (fullNIndex == stringLength - 1){
+            strcpy(output.firstName, strName + firstNameFloor);
+        }
+    }
+
+    return output;
+}
+
 // |===| Essential Functions Section |=====================|
 
 void
 printPassenger(struct Passenger *Passenger){
-    printf("\nTrip Number:\t\t %s\n", Passenger->tripNumber);
-    printf("Embarkation Point:\t %s\n", Passenger->embarkationPoint);
-    printf("Passenger Name:\t\t %s\n", Passenger->passengerName);
-    printf("ID Number:\t\t %u\n", Passenger->idNumber);
-    printf("Priority Number:\t %u\n", Passenger->priorityNumber);
-    printf("Time:\t\t\t %d:%d\n", Passenger->timeOfTrip.hour, Passenger->timeOfTrip.minute);
-    printf("Drop off Point:\t\t %s\n\n", Passenger->dropOffPoint);
+    printf("\n#>---<|[>] Result|>--------------#\n");
+    printf("Y Trip Number:\t\t %s\n", Passenger->tripNumber);
+    printf("| Embarkation Point:\t %s\n", Passenger->embarkationPoint);
+    printf("| Passenger Name:\t %s, %s ", Passenger->passengerName.lastName, Passenger->passengerName.firstName);
+    if (Passenger->passengerName.midI){
+        printf("%c.", Passenger->passengerName.midI);
+    }
+    printf("\n");
+    printf("| ID Number:\t\t %u\n", Passenger->idNumber);
+    printf("| Priority Number:\t %u\n", Passenger->priorityNumber);
+    printf("| Time:\t\t\t %02d%02d\n", Passenger->timeOfTrip.hour, Passenger->timeOfTrip.minute);
+    printf("A Drop off Point:\t %s\n", Passenger->dropOffPoint);
+    printf("#>-------------------------------#\n\n");
 }
 
 
-void passwordMenu(int *isChoosingAdminCmds, int *isInputingPass, char *realPass){
+void 
+passwordMenu(int *isChoosingAdminCmds, int *isInputingPass, char *realPass){
     String127 inputPass;
     String63 errorMessage = "Error, not a string.";
     String15 graphicCode = "PassMenu";
@@ -493,7 +547,8 @@ void passwordMenu(int *isChoosingAdminCmds, int *isInputingPass, char *realPass)
  * @param  *dropOffPoint: 
  * @return
  */
-ErrorInt tripFilePassengerAppender(struct DateDMY tripDate, struct Passenger *newPassenger){
+ErrorInt 
+tripFilePassengerAppender(struct DateDMY tripDate, struct Passenger *newPassenger){
     FILE *pFileBusTrip;
     String15 fileName = "";
     String15 strTripOfDate = "";
@@ -528,6 +583,7 @@ int
 tripFileGetPassenger(struct DateDMY *tripDate, struct Passenger *keyPassenger, int key){
     FILE *pFileBusTrip;
     String255 temporaryBuffer = "";
+    String255 strName = "";
     String15 fileName = "";
     String15 strDateOfTrip = "";
     String15 strTimeOfTrip = "";
@@ -562,7 +618,7 @@ tripFileGetPassenger(struct DateDMY *tripDate, struct Passenger *keyPassenger, i
     };
 
     fgets(keyPassenger->embarkationPoint, 255, pFileBusTrip);
-    fgets(keyPassenger->passengerName, 255, pFileBusTrip);
+    fgets(strName, 255, pFileBusTrip);
     fgets(strIdNumber, 255, pFileBusTrip);
     fgets(strPriorityNumber, 255, pFileBusTrip);
     fgets(strTimeOfTrip, 255, pFileBusTrip);
@@ -571,10 +627,11 @@ tripFileGetPassenger(struct DateDMY *tripDate, struct Passenger *keyPassenger, i
     // Clean the Key's details;
     removeNewLine(keyPassenger->tripNumber);
     removeNewLine(keyPassenger->embarkationPoint);
-    removeNewLine(keyPassenger->passengerName);
+    removeNewLine(strName);
     removeNewLine(strIdNumber);
     removeNewLine(strPriorityNumber);
     removeNewLine(keyPassenger->dropOffPoint);
+    keyPassenger->passengerName = GetNameFromString(strName);
     keyPassenger->idNumber = atoi(strIdNumber);
     keyPassenger->priorityNumber = atoi(strPriorityNumber);
     keyPassenger->timeOfTrip = TimeHMfromString(strTimeOfTrip);
@@ -585,10 +642,68 @@ tripFileGetPassenger(struct DateDMY *tripDate, struct Passenger *keyPassenger, i
 }
 
 int
-tripFileGetBusTrip(struct DateDMY *tripDate, TripNo inputTrip, Bus16 BusTrip){
-    struct Passenger keyPassenger;
+tripFileGetDetail(struct DateDMY *tripDate, Bus16 BusTrip, String63 LastName, int keys[], struct NameField searchResults[], int size){
+    struct Passenger holder;
     FILE *pFileBusTrip;
     String255 temporaryBuffer = "";
+    String255 strName = "";
+    String15 fileName = "";
+    String15 strTimeOfTrip = "";
+    String15 strPriorityNumber = "";
+    String15 strIdNumber = "";
+    struct TimeHM tempTime;
+    struct NameField nameBuffer;
+    ErrorInt nIndex = -1;
+    int isFileDoesNotExist = 0;
+    int BusPassenger = 0;
+    int hasNotFoundEOF = TRUE;
+    int hasFullSearches = FALSE;
+    int numSubstring = 0;
+    int lineSearch = 0; 
+    int line;
+    // File Handling
+    StringfromDateDMY(fileName, tripDate, TRUE);
+    pFileBusTrip = fopen(fileName, "r");
+    isFileDoesNotExist = pFileBusTrip == NULL;
+    if (isFileDoesNotExist) {   
+        fclose(pFileBusTrip);
+        printErrorMessage("ERROR DOES NOT EXIST");
+        return EROR_FILE_NOT_FOUND;
+    }
+    fgets(temporaryBuffer, 255, pFileBusTrip);
+    fgets(temporaryBuffer, 255, pFileBusTrip);
+    while (hasNotFoundEOF && !hasFullSearches){
+        if (fgets(strName, 255, pFileBusTrip) == NULL) {
+            fclose(pFileBusTrip);
+            hasNotFoundEOF = FALSE;
+        } else {
+            removeNewLine(strName);
+            nameBuffer = GetNameFromString(strName);
+            if (isSubString(LastName, nameBuffer.lastName) == TRUE){
+                searchResults[numSubstring] = nameBuffer;
+                keys[numSubstring] = lineSearch;
+                numSubstring++;
+                if (numSubstring == size)
+                    hasFullSearches = TRUE;
+            }
+        }
+        for(line = 0; line < 6 && hasNotFoundEOF; line++)
+            if (fgets(temporaryBuffer, 255, pFileBusTrip) == NULL) {
+                fclose(pFileBusTrip);
+                hasNotFoundEOF = FALSE;
+            }
+        lineSearch++;
+    }
+    fclose(pFileBusTrip);
+    return numSubstring;
+}
+
+int
+tripFileGetBusTrip(struct DateDMY *tripDate, TripNo inputTrip, Bus16 BusTrip){
+    struct Passenger holder;
+    FILE *pFileBusTrip;
+    String255 temporaryBuffer = "";
+    String255 strName = "";
     String15 fileName = "";
     String15 strTimeOfTrip = "";
     String15 strPriorityNumber = "";
@@ -610,30 +725,32 @@ tripFileGetBusTrip(struct DateDMY *tripDate, TripNo inputTrip, Bus16 BusTrip){
     }
 
     while (hasNotFoundEOF){
-        if (fgets(keyPassenger.tripNumber, 255, pFileBusTrip) == NULL) {
+        if (fgets(holder.tripNumber, 255, pFileBusTrip) == NULL) {
             fclose(pFileBusTrip);
             hasNotFoundEOF = FALSE;
         } else {
-            removeNewLine(keyPassenger.tripNumber);
+            removeNewLine(holder.tripNumber);
         }
-        if (strcmp(keyPassenger.tripNumber, inputTrip) == 0 && hasNotFoundEOF){
-            fgets(keyPassenger.embarkationPoint, 255, pFileBusTrip);
-            fgets(keyPassenger.passengerName, 255, pFileBusTrip);
+
+        if (strcmp(holder.tripNumber, inputTrip) == 0 && hasNotFoundEOF){
+            fgets(holder.embarkationPoint, 255, pFileBusTrip);
+            fgets(strName, 255, pFileBusTrip);
             fgets(strIdNumber, 255, pFileBusTrip);
             fgets(strPriorityNumber, 255, pFileBusTrip);
             fgets(strTimeOfTrip, 255, pFileBusTrip);
-            fgets(keyPassenger.dropOffPoint, 255, pFileBusTrip);
+            fgets(holder.dropOffPoint, 255, pFileBusTrip);
 
-            removeNewLine(keyPassenger.embarkationPoint);
-            removeNewLine(keyPassenger.passengerName);
+            removeNewLine(holder.embarkationPoint);
+            removeNewLine(strName);
             removeNewLine(strIdNumber);
             removeNewLine(strPriorityNumber);
-            removeNewLine(keyPassenger.dropOffPoint);
-            keyPassenger.idNumber = atoi(strIdNumber);
-            keyPassenger.priorityNumber = atoi(strPriorityNumber);
-            keyPassenger.timeOfTrip = tempTime;
-            keyPassenger.timeOfTrip = TimeHMfromString(strTimeOfTrip);
-            BusTrip[BusPassenger] = keyPassenger;
+            removeNewLine(holder.dropOffPoint);
+            holder.idNumber = atoi(strIdNumber);
+            holder.priorityNumber = atoi(strPriorityNumber);
+            holder.passengerName = GetNameFromString(strName);
+            holder.timeOfTrip = tempTime;
+            holder.timeOfTrip = TimeHMfromString(strTimeOfTrip);
+            BusTrip[BusPassenger] = holder;
             BusPassenger++;
         } else if (hasNotFoundEOF) {
             for(line = 0; line < 6 ; line++)
@@ -699,6 +816,8 @@ tripFileSearchSameTrip(struct DateDMY *tripDate, TripNo tripNumber, Bus16 BusOfT
     return tripIndex;
 }
 
+
+
 // |===| PASSENGER CMD SECTION |=====================|
 
 void userEmbarkation(){
@@ -715,7 +834,8 @@ void adminNoOfPassenger(){
 
 }
 
-void adminCountPassengerDropOff(struct DateDMY *tripDate){
+void 
+adminCountPassengerDropOff(struct DateDMY *tripDate){
     String63 strFiller = "Admin counts number of Passenger in a drop-off.";
     printSingleColorText( FG_YELLOW, strFiller);
     Bus16 BusTrip;
@@ -759,7 +879,8 @@ void adminCountPassengerDropOff(struct DateDMY *tripDate){
     }
 }
 
-void adminViewPassengerInfo(struct DateDMY *tripDate){
+void 
+adminViewPassengerInfo(struct DateDMY *tripDate){
     String63 strFiller = "Admin views the passenger info.";
     printSingleColorText( FG_YELLOW, strFiller);
     Bus16 BusTrip;
@@ -773,8 +894,8 @@ void adminViewPassengerInfo(struct DateDMY *tripDate){
     TripNo inputTripNumber = ""; 
 
     while (!isDoneVieweing){
-        repeatGetTripNo(inputTripNumber, "CountPassenger", "\n\t> Trip Number:", "Please input an existing trip. Type \"quit\" to exit.");
-        if (strcmp(inputTripNumber, "quit\n") == 0){
+        repeatGetTripNo(inputTripNumber, "CountPassenger", "\n\t> Trip Number:", "Please input an existing trip. \n\tType \'0\' to exit.");
+        if (strcmp(inputTripNumber, "quit") == 0){
             isDoneVieweing = TRUE;
         } else {
             printf("Trip: %s\n", inputTripNumber);    
@@ -795,10 +916,55 @@ void adminViewPassengerInfo(struct DateDMY *tripDate){
     }
 }
 
-void adminSearchPassenger(){
+void adminSearchPassenger(struct DateDMY *dateToday){
     String63 strFiller = "Admin searches the passenger in a trip.";
     printSingleColorText( FG_YELLOW, strFiller);
-
+    Bus16 BusTrip;
+    struct Passenger searchingPassenger;
+    struct NameField searchResults[16];
+    int keys[16] = {0};
+    int results = 0;
+    int i;
+    int size = 16;
+    String15 name;
+    int userChoice;
+    int isFinding = TRUE;
+    int isSearching = TRUE;
+    while(isFinding){
+        repeatGetString(name, 15, "SearchPass", "\t> Last Name: ", "Error, not a last name");
+        removeNewLine(name);
+        if (strcmp(name, "quit") == 0){
+            isFinding = FALSE;
+        } else {
+            results = tripFileGetDetail(dateToday, BusTrip, name, keys, searchResults, size);
+            isSearching = TRUE;
+            while (results > 0 && isSearching){
+                printGraphics("SearchResult1");
+                for(i = 0; i < results; i++){
+                    printf("| %02d) Name: \"%s, %s", i + 1, searchResults[i].lastName, searchResults[i].firstName);
+                    if (searchResults[i].midI){
+                        printf(" %c.\"\n", searchResults[i].midI);
+                    } else 
+                        printf("\"\n");
+                        
+                }
+                repeatGetInteger(&userChoice, "SearchResult2", "\t> Choice: ", "Not a number.");
+                if (userChoice == 0){
+                    isSearching = FALSE;
+                    system("cls");
+                } else {
+                    tripFileGetPassenger(dateToday, &searchingPassenger, keys[userChoice - 1]);
+                    printPassenger(&searchingPassenger);
+                }
+            }
+            if (!results){
+                system("cls");
+                printf("\nLast name: \"%s\" produces %d result.\n\n", name, results);
+            }
+        }
+        
+    }
+    
 }
 
 void adminEmbarkation(){
@@ -869,7 +1035,7 @@ void menuAdmin(){
                 adminViewPassengerInfo(&date);
                 break;
             case 'd':
-                adminSearchPassenger();
+                adminSearchPassenger(&date);
                 break;
             case 'e':
                 adminEmbarkation();

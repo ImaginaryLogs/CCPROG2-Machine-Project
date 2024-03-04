@@ -66,6 +66,25 @@ ID:CountPassenger 6;
 #>==<|[*] Count Passenger |>===============<#
 |                                           |
 |   Please input the Trip Number to Count.  |
+|   Insert '0' to go back.                  |
+|                                           |
+#>-----------------------------------------<#
+ID:SearchPass 6;
+#>==<|[*] Check Passenger |>===============<#
+|                                           |
+|   Please input the Last Name of Passenger |
 |   Insert "quit" to go back.               |
 |                                           |
 #>-----------------------------------------<#
+ID:SearchResult1 2;
+#>==<|[*] Searches |>======================<#
+Y                                           Y
+ID:SearchResult2 2;
+A                                           A
+#>-----------------------------------------<#
+Y                                           Y
+|   Insert a number to check the info       |
+|   of the passengers above.                |
+|   Insert '0' to quit.                     |
+A                                           A
+#>-----------------------------------------<#                     

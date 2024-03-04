@@ -243,7 +243,6 @@ Vegapunk, Pythagoras
 1
 1:00
 2nd drop-off point – Phase 5, San Jose Village
-13
 AE101
 DLSU Manila Campus
 Nefertari, Karoo
@@ -253,7 +252,7 @@ Nefertari, Karoo
 3rd drop-off point – Milagros Del Rosario (MRR) Building – East Canopy
 AE105
 DLSU Manila Campus
-Vegepunk, Atlas
+Vegapunk, Atlas
 12300043
 1
 1:00
