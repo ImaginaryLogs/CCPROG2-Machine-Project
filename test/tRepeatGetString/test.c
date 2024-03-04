@@ -1,16 +1,16 @@
 #include "../../src/CampoRoanV_DelacalzadaWandaR_Functions.h"
 //CREDITS: https://patorjk.com/software/taag/#p=display&f=Graceful&t=%22%20THE%20QUICK%22%0A%22%20BROWN%20FOX%20JUMPS%20%22%0A%22%20OVER%20THE%20LAZY%20DOG%20%22%0A%22%20%5CN%20%22%20%2F%2F%20LITERALLY
 int testValues(char *strInput1, char *strInput2, char *strInput3, char *strInput4){
-    int passedValues = 0;
     String15 strCond1 = "THE QUICK";
     String15 strCond2 = "BROWN FOX JUMPS";
     String15 strCond3 = "OVER THE LAZY";
-    String15 strCond4 = "\\n";
-
+    String15 strCond4 = "";
+    
     int condition1 = !strcmp(strInput1, strCond1);
     int condition2 = !strcmp(strInput2, strCond2);
     int condition3 = !strcmp(strInput3, strCond3);
     int condition4 = !strcmp(strInput4, strCond4);
+    int passedValues = 0;
 
     printf("\nReceived Values:\n");
     printf(" %d - Original:\"%s\" \n \t vs Input:\"%s\" \n", condition1, strInput1, strCond1);

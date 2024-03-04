@@ -62,3 +62,10 @@ ID:PassengerMenu, 6;
 |    [b]: Go Back                           |
 |                                           |
 #>-----------------------------------------<#
+ID:CountPassenger, 6;
+#>==<|[*] Count Passenger |>===============<#
+|                                           |
+|   Please input the Trip Number to Count.  |
+|   Insert "quit" to go back.               |
+|                                           |
+#>-----------------------------------------<#

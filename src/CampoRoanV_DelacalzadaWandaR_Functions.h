@@ -6,8 +6,9 @@
 #include <sys/stat.h>
 /*
  * REFERENCES:
- * 
- *  
+ * [1] https://www.ibm.com/docs/en/zos/2.1.0?topic=functions-itoa-convert-int-into-string
+ * [2] time_t: https://en.cppreference.com/w/c/chrono/time
+ * [3] 
  */
 
 // |===| Define and Typedef |===================================|
@@ -19,14 +20,22 @@
 #define FG_YELLOW (FOREGROUND_RED | FOREGROUND_GREEN)
 #define FG_WHITE (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)
 
+#define PROG_SUCCESS 0
+#define EROR_KEY_NOT_FOUND -1
+#define EROR_FILE_NOT_FOUND -2
+
 
 typedef int ErrorInt;
 
+typedef char String511[512];
 typedef char String255[256];
+typedef char String127[128];
 typedef char String63[64];
 typedef char String31[32];
 typedef char String15[16];
+typedef char String7[8];
 typedef char TripNo[7];
+
 struct TimeHM {
     unsigned int hour;
     unsigned int minute;
@@ -42,13 +51,12 @@ struct Passenger {
     String255 dropOffPoint;
     String255 passengerName;
     TripNo tripNumber;
-    unsigned int idNumber;
     struct DateDMY dateOfTrip;
     struct TimeHM timeOfTrip;
+    unsigned int idNumber;
     unsigned int priorityNumber;
 };
 
-typedef struct Passenger Bus13[13];
 typedef struct Passenger Bus16[13];
 
 
@@ -89,21 +97,8 @@ printErrorMessage(char *errorMessage){
     SetConsoleTextAttribute(hConsoleOutput, FG_RED | FOREGROUND_INTENSITY);
     printf("\n#>==<|[X] ERROR: |>=========================#\n");
     SetConsoleTextAttribute(hConsoleOutput, FG_RED);
-    printf("\n\t \n", errorMessage);
+    printf("\n\t%s \n", errorMessage);
     SetConsoleTextAttribute(hConsoleOutput, FG_RED | FOREGROUND_INTENSITY);
-    printf("\n#>-----------------------------------------<#\n");
-    SetConsoleTextAttribute(hConsoleOutput, FG_WHITE | BG_BLACK);
-    printf("\n");
-}
-
-void
-printWarningMessage(char *warningMessage){
-    HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-    SetConsoleTextAttribute(hConsoleOutput, FG_YELLOW | FOREGROUND_INTENSITY);
-    printf("\n#>==<|[X] Warning: |>======================<#\n");
-    SetConsoleTextAttribute(hConsoleOutput, FG_YELLOW);
-    printf("\n\t%s\n", warningMessage);
-    SetConsoleTextAttribute(hConsoleOutput, FG_YELLOW | FOREGROUND_INTENSITY);
     printf("\n#>-----------------------------------------<#\n");
     SetConsoleTextAttribute(hConsoleOutput, FG_WHITE | BG_BLACK);
     printf("\n");
@@ -122,6 +117,8 @@ printPopUpMessage(char *headerString, int headerColor, char *bodyMessage){
     printf("<#");
     SetConsoleTextAttribute(hConsoleOutput, FG_WHITE | BG_BLACK);
     printf("\n\n\t%s\n\n", bodyMessage);
+
+
     SetConsoleTextAttribute(hConsoleOutput, headerColor | FOREGROUND_INTENSITY);
     printf("#>---------");
     for(i = 0; i < 32; i++){
@@ -219,6 +216,36 @@ printGraphics(char *graphicsID){
     return errorCode;
 }
 
+void
+repeatGetTripNo(char *pInput, char choiceMenuGraphicsCode[], char *promtMessage, char *errorMessage){
+    int isIncorrectInput = 1;
+    int isInputSuccessful = 0;
+    int isPossibleOverflow = 0;
+    int isRemainWhitespace = 0;
+    int TripNumber;
+    int typeReturned = 0;
+    char closingChar;
+    String7 strTripNumber = "";
+    do {
+        printGraphics(choiceMenuGraphicsCode);
+        printf("%s", promtMessage);
+        typeReturned = scanf("%d%c", &TripNumber, &closingChar);
+        if (TripNumber < 99 || TripNumber > 1000 || typeReturned != 2 || closingChar != '\n'){
+            system("cls");
+            if (closingChar != '\n')
+                clearInput();
+            printErrorMessage(errorMessage);
+        } else {
+            isIncorrectInput = 0;
+            strcat(pInput, "AE");
+            itoa(TripNumber, strTripNumber, 10);
+            strcat(pInput, strTripNumber);
+            printf("True! %d\n", TripNumber);
+        }
+
+    } while(isIncorrectInput);
+}
+
 /**
  * @brief Promts the user for a string. If the given does not fit into given length of the string, send error and repromt again.
  * 
@@ -230,30 +257,34 @@ printGraphics(char *graphicsID){
  * Pre-condition: ASCII_Art.txt file exist and its metadata aligned, choiceMenuGraphicsCode given exist in ASCII_Art.txt, and promtMessage and errorMessage have been declared and initialized.
  */
 void 
-repeatGetString(char *pInput, int length, char choiceMenuGraphicsCode[], char promtMessage[], char errorMessage[]){
+repeatGetString(char *pInput, int maxLength, char choiceMenuGraphicsCode[], char *promtMessage, char *errorMessage){
     int isIncorrectInput = 1;
-    int dataTypes;
-    char closingChar;
-    char stringFormat[13] = " %";
-    char stringSize[5] = {""};
-
-    itoa(length, stringSize, 10);
-    strcat(stringFormat, stringSize);
-    strcat(stringFormat, "[^\n]%c");
+    int isInputSuccessful = 0;
+    int isPossibleOverflow = 0;
+    int isRemainWhitespace = 0;
 
     do {
         printGraphics(choiceMenuGraphicsCode);
         printf("%s", promtMessage);
-        dataTypes = scanf(stringFormat, pInput, &closingChar);
-        if (dataTypes != 2 || closingChar != '\n') {
-            system("cls");
+
+        // Replace the last non-null char in string with something temporarily
+        pInput[maxLength] = 'A';
+        fgets(pInput, maxLength + 1, stdin); // size of array = maxLength + 1
+        
+        isPossibleOverflow = pInput[maxLength - 1] != '\n' && pInput[maxLength] == '\0';
+        isRemainWhitespace = isPossibleOverflow ? getchar() == '\n' : FALSE;
+
+        if (isPossibleOverflow && !isRemainWhitespace){
             clearInput();
             printErrorMessage(errorMessage);
+        } else 
+            isIncorrectInput = FALSE;
+        
+        if (!isRemainWhitespace) {
+            pInput[maxLength] = '\0';
+            pInput[strlen(pInput) - 1] = '\0';
         }
-        else
-            isIncorrectInput = 0;
-    }
-    while(isIncorrectInput);
+    } while(isIncorrectInput);
 }
 
 /**
@@ -294,7 +325,7 @@ repeatGetInteger(int *pInput, char choiceMenuGraphicsCode[], char promtMessage[]
 */
 void
 repeatGetChar(char *pInput, char choiceMenuGraphicsCode[], char promtMessage[], char errorMessage[]){
-    int isIncorrectInput = 1;
+    int isIncorrectInput = TRUE;
     char closingChar;
     do {
         printGraphics(choiceMenuGraphicsCode);
@@ -312,31 +343,130 @@ repeatGetChar(char *pInput, char choiceMenuGraphicsCode[], char promtMessage[], 
 }
 
 void
-StringfromDateDMY(char *dateString, struct DateDMY *date){
+StringfromDateDMY(char *dateString, struct DateDMY *date, int isFilename){
+    String15 fileName = "Trip-";
     String15 strYear = "";
     String15 strMonth = "";
     String15 strDay = "";
+    String15 fileExtension = ".txt";
+    // Uses itoa, converts int into a string based on the given base REF: [01]. 
     itoa(date->year, strYear, 10);
     itoa(date->month, strMonth, 10);
     itoa(date->day, strDay, 10);
+
+    if (isFilename)
+        strcat(dateString, fileName);
 
     strcat(dateString, strYear);
     dateString[strlen(dateString)] = '-';
     strcat(dateString, strMonth);
     dateString[strlen(dateString)] = '-';
     strcat(dateString, strDay);
+
+    if (isFilename)
+        strcat(dateString, fileExtension);
+}
+
+int
+DateDMYfromString(struct DateDMY *date, char *dateString){
+    String15 year = "";
+    int i;
+    int foundYearMonthSeparator;
+    strcpy(year, dateString);
+    for (i = 0; i < strlen(dateString) && !foundYearMonthSeparator; i++){
+        if (dateString[i] == '-')
+            foundYearMonthSeparator = TRUE;
+    }
+    if (!foundYearMonthSeparator)
+        return -1;
+    year[i] = '\0';
+    printf("%s", year);
+
+    return PROG_SUCCESS;
+}
+
+struct TimeHM TimeHMfromString( char *timeString){
+    struct TimeHM time;
+    int i;
+    int foundYearMonthSeparator;
+    int separator = timeString[1] == ' ' ? 1 : 2;
+    String7 hour = "";
+    strcpy(hour, timeString);
+    hour[separator] = '\0';
+    time.hour = atoi(hour);
+    time.minute = atoi(hour + separator + 1);
+    return time;
+}
+
+int
+isSubString(char *subStr, char *str){
+    int i, j, nSameChars;
+    int isFound = 0;
+    int subStrLength, strLength;
+    subStrLength = strlen(subStr);
+    strLength = strlen(str);
+    for(i = 0; i < strLength - subStrLength + 1 && !isFound; i++){
+        nSameChars = 0;
+
+        for(j = 0; j < subStrLength; j++)
+            nSameChars += str[i + j] == subStr[j];
+
+        if (nSameChars == subStrLength)
+            isFound = 1;
+    }
+    
+    return isFound;
+}
+
+struct DateDMY GetDateToday(){
+    struct DateDMY today;
+    struct tm Time;
+    time_t t = time(NULL);
+    Time = *localtime(&t);
+    today.year = Time.tm_year + 1900;
+    today.month = Time.tm_mon + 1;
+    today.day = Time.tm_mday;
+    return today;
+}
+
+struct TimeHM GetTimeHmToday(){
+    struct TimeHM timeNow;
+    struct tm Time;
+    time_t t = time(NULL);
+    Time = *localtime(&t);
+    timeNow.hour = Time.tm_hour;
+    timeNow.minute = Time.tm_min;
+    return timeNow;
+}
+
+void
+removeNewLine(char *strInput){
+    if(strInput[strlen(strInput)-1] == '\n')
+        strInput[strlen(strInput)-1] = '\0';
 }
 
 // |===| Essential Functions Section |=====================|
 
+void
+printPassenger(struct Passenger *Passenger){
+    printf("\nTrip Number:\t\t %s\n", Passenger->tripNumber);
+    printf("Embarkation Point:\t %s\n", Passenger->embarkationPoint);
+    printf("Passenger Name:\t\t %s\n", Passenger->passengerName);
+    printf("ID Number:\t\t %u\n", Passenger->idNumber);
+    printf("Priority Number:\t %u\n", Passenger->priorityNumber);
+    printf("Time:\t\t\t %d:%d\n", Passenger->timeOfTrip.hour, Passenger->timeOfTrip.minute);
+    printf("Drop off Point:\t\t %s\n\n", Passenger->dropOffPoint);
+}
+
+
 void passwordMenu(int *isChoosingAdminCmds, int *isInputingPass, char *realPass){
-    String255 inputPass;
+    String127 inputPass;
     String63 errorMessage = "Error, not a string.";
     String15 graphicCode = "PassMenu";
     String15 prompt = "\t> Password: ";
     String31 strWrongPass = "Wrong Input. Try again.";
 
-    repeatGetString(inputPass, 255, graphicCode, prompt, errorMessage);
+    repeatGetString(inputPass, 127, graphicCode, prompt, errorMessage);
     printf("\n");
 
     if (strcmp(inputPass, realPass) == 0) {
@@ -348,7 +478,6 @@ void passwordMenu(int *isChoosingAdminCmds, int *isInputingPass, char *realPass)
         printErrorMessage(strWrongPass);
     }
 }
-
 
 
 /**
@@ -364,72 +493,211 @@ void passwordMenu(int *isChoosingAdminCmds, int *isInputingPass, char *realPass)
  * @param  *dropOffPoint: 
  * @return
  */
-ErrorInt databaseBusAppender(struct DateDMY tripDate, struct Passenger newPassenger){
-    struct stat st = {0}; // struct stat is STATistcs of tripDatebase
-
+ErrorInt tripFilePassengerAppender(struct DateDMY tripDate, struct Passenger *newPassenger){
     FILE *pFileBusTrip;
-
-    String15 folderNameTrips = "TripsFolder";
-    String15 pathParentBack = "..\\";
-    String15 pathTrips = ".\\TripsFolder";
-    
-    String63 strErrorFolderNotFound = "Folder for Trips not yet created.\n\tCreating... /TripsFolder";
-    ErrorInt nFileWriteState = 0;
-
-    String15 fileName = "Trip-";
-    String15 strToday = "";
-    String15 fileExtension = ".txt";
-
-    int isFolderLost = FALSE;
-    int isFolderCreated = FALSE;
-    int cannotChangeDir = FALSE;
+    String15 fileName = "";
+    String15 strTripOfDate = "";
     int isFileDoesNotExist = FALSE;
 
-    StringfromDateDMY(fileName, &tripDate);
-    strcat(fileName, fileExtension);
+    StringfromDateDMY(fileName, &tripDate, TRUE);
+
     printf("Date: %s\n", fileName);
-
-    
-    // Check if folder name exist by stat
-    isFolderLost = stat(pathTrips, &st) == -1;
-    if (isFolderLost) {
-        isFolderCreated = CreateDirectory(folderNameTrips, NULL); // CreateDirectory from windows.h with Default File perms (NULL)
-        printErrorMessage(strErrorFolderNotFound);
-    }
-    // Check if folder now exists
-    isFolderLost = stat(pathTrips, &st) == -1;
-    if (isFolderLost && !isFolderCreated)
-        return 1; // Error code 1 for File Creation error.
-
-    // Change dir
-    cannotChangeDir = chdir(pathTrips);
-    if (cannotChangeDir)
-        return 2; // Error code 2 for Change Directory error.
-
     pFileBusTrip = fopen(fileName, "a");
     
     isFileDoesNotExist = pFileBusTrip == NULL;
     if (isFileDoesNotExist) {   
-        nFileWriteState = 3; // Error code 3 for File Write error.
-    } else {
-        // Actual Passenger Append
-        fprintf(pFileBusTrip, "%s\n", newPassenger.tripNumber);
-        fprintf(pFileBusTrip, "%s\n", newPassenger.embarkationPoint);
-        fprintf(pFileBusTrip, "%s\n", newPassenger.passengerName);
-        fprintf(pFileBusTrip, "%u\n", newPassenger.idNumber);
-        fprintf(pFileBusTrip, "%u\n", newPassenger.priorityNumber);
-        fprintf(pFileBusTrip, "%u\n", newPassenger.dateOfTrip);
-        fprintf(pFileBusTrip, "%u\n", newPassenger.timeOfTrip);
-        fprintf(pFileBusTrip, "%s\n", newPassenger.dropOffPoint);
+        fclose(pFileBusTrip);
+        return EROR_FILE_NOT_FOUND;
     }
+
+    // Actual Passenger Append
+    fprintf(pFileBusTrip, "%s\n", newPassenger->tripNumber);
+    fprintf(pFileBusTrip, "%s\n", newPassenger->embarkationPoint);
+    fprintf(pFileBusTrip, "%s\n", newPassenger->passengerName);
+    fprintf(pFileBusTrip, "%u\n", newPassenger->idNumber);
+    fprintf(pFileBusTrip, "%u\n", newPassenger->priorityNumber);
+    fprintf(pFileBusTrip, "%d %d\n", newPassenger->timeOfTrip.hour, newPassenger->timeOfTrip.minute);
+    fprintf(pFileBusTrip, "%s\n", newPassenger->dropOffPoint);
+    
+    fclose(pFileBusTrip);
+    
+    return PROG_SUCCESS;
+}
+
+int 
+tripFileGetPassenger(struct DateDMY *tripDate, struct Passenger *keyPassenger, int key){
+    FILE *pFileBusTrip;
+    String255 temporaryBuffer = "";
+    String15 fileName = "";
+    String15 strDateOfTrip = "";
+    String15 strTimeOfTrip = "";
+    String15 strPriorityNumber = "";
+    String15 strIdNumber = "";
+    struct TimeHM tempTime;
+    ErrorInt nIndex = -1;
+    int isFileDoesNotExist = 0;
+    int line;
+    // File Handling
+    StringfromDateDMY(fileName, tripDate, TRUE);
+    pFileBusTrip = fopen(fileName, "r");
+    isFileDoesNotExist = pFileBusTrip == NULL;
+    if (isFileDoesNotExist) {   
+        fclose(pFileBusTrip);
+        return EROR_FILE_NOT_FOUND;
+    }
+
+    // Skip Unnecessary Lines;
+    for(line = 0; line < key * 7 ; line++)
+        if(fgets(temporaryBuffer, 255, pFileBusTrip) == NULL) {
+            fclose(pFileBusTrip);
+            printErrorMessage("EOF REACHED! Search others.");
+            return EROR_KEY_NOT_FOUND;
+        }
+    
+    // Update Key;
+    if(fgets(keyPassenger->tripNumber, 255, pFileBusTrip) == NULL) {
+        fclose(pFileBusTrip);
+        printErrorMessage("EOF REACHED! Search others.");
+        return EROR_KEY_NOT_FOUND;
+    };
+
+    fgets(keyPassenger->embarkationPoint, 255, pFileBusTrip);
+    fgets(keyPassenger->passengerName, 255, pFileBusTrip);
+    fgets(strIdNumber, 255, pFileBusTrip);
+    fgets(strPriorityNumber, 255, pFileBusTrip);
+    fgets(strTimeOfTrip, 255, pFileBusTrip);
+    fgets(keyPassenger->dropOffPoint, 255, pFileBusTrip);
+    
+    // Clean the Key's details;
+    removeNewLine(keyPassenger->tripNumber);
+    removeNewLine(keyPassenger->embarkationPoint);
+    removeNewLine(keyPassenger->passengerName);
+    removeNewLine(strIdNumber);
+    removeNewLine(strPriorityNumber);
+    removeNewLine(keyPassenger->dropOffPoint);
+    keyPassenger->idNumber = atoi(strIdNumber);
+    keyPassenger->priorityNumber = atoi(strPriorityNumber);
+    keyPassenger->timeOfTrip = TimeHMfromString(strTimeOfTrip);
+    
     fclose(pFileBusTrip);
 
-    // Change directory back;
-    cannotChangeDir = chdir(pathParentBack);
-    if (cannotChangeDir)
-        return 2;
+    return PROG_SUCCESS;
+}
+
+int
+tripFileGetBusTrip(struct DateDMY *tripDate, TripNo inputTrip, Bus16 BusTrip){
+    struct Passenger keyPassenger;
+    FILE *pFileBusTrip;
+    String255 temporaryBuffer = "";
+    String15 fileName = "";
+    String15 strDateOfTrip = "";
+    String15 strTimeOfTrip = "";
+    String15 strPriorityNumber = "";
+    String15 strIdNumber = "";
+    struct TimeHM tempTime;
+    ErrorInt nIndex = -1;
+    int isFileDoesNotExist = 0;
+    int line;
+    int BusPassenger = 0;
+    int hasNotFoundEOF = TRUE;
+    // File Handling
+    StringfromDateDMY(fileName, tripDate, TRUE);
+    pFileBusTrip = fopen(fileName, "r");
+    isFileDoesNotExist = pFileBusTrip == NULL;
+    if (isFileDoesNotExist) {   
+        fclose(pFileBusTrip);
+        printErrorMessage("ERROR DOES NOT EXIST");
+        return EROR_FILE_NOT_FOUND;
+    }
+
+    while (hasNotFoundEOF){
+        if (fgets(keyPassenger.tripNumber, 255, pFileBusTrip) == NULL) {
+            fclose(pFileBusTrip);
+            hasNotFoundEOF = FALSE;
+        } else {
+            removeNewLine(keyPassenger.tripNumber);
+        }
+        if (strcmp(keyPassenger.tripNumber, inputTrip) == 0 && hasNotFoundEOF){
+            fgets(keyPassenger.embarkationPoint, 255, pFileBusTrip);
+            fgets(keyPassenger.passengerName, 255, pFileBusTrip);
+            fgets(strIdNumber, 255, pFileBusTrip);
+            fgets(strPriorityNumber, 255, pFileBusTrip);
+            fgets(strTimeOfTrip, 255, pFileBusTrip);
+            fgets(keyPassenger.dropOffPoint, 255, pFileBusTrip);
+
+            removeNewLine(keyPassenger.embarkationPoint);
+            removeNewLine(keyPassenger.passengerName);
+            removeNewLine(strIdNumber);
+            removeNewLine(strPriorityNumber);
+            removeNewLine(keyPassenger.dropOffPoint);
+            keyPassenger.idNumber = atoi(strIdNumber);
+            keyPassenger.priorityNumber = atoi(strPriorityNumber);
+            keyPassenger.timeOfTrip = tempTime;
+            keyPassenger.timeOfTrip = TimeHMfromString(strTimeOfTrip);
+            BusTrip[BusPassenger] = keyPassenger;
+            BusPassenger++;
+        } else if (hasNotFoundEOF) {
+            for(line = 0; line < 6 ; line++)
+                fgets(temporaryBuffer, 255, pFileBusTrip) == NULL;
+        }
+    }      
+
+    fclose(pFileBusTrip);
+
+    return BusPassenger;
+}
+
+int
+tripFileSearchPassengerFull(struct DateDMY *tripDate, struct Passenger *keyPassenger){
+    int i;
+    int isFound = 0;
+    int key = -1;
+    for(i = 0; i < 16 && !isFound; i++){
+        isFound = tripFileGetPassenger(tripDate, keyPassenger, i) == 0 ? TRUE : -1;
+        if (isFound)
+            key = i;
+    }
+    return key;
+}
+
+int
+tripFileSearchSameTrip(struct DateDMY *tripDate, TripNo tripNumber, Bus16 BusOfTrip){
+    FILE *pFileBusTrip;
+    String511 temporaryBuffer = "";
+    String15 fileName = "";
+    String15 strDateOfTrip = "";
+    struct Passenger tempPassenger;
+    struct TimeHM tempTime;
+    ErrorInt nIndex = -1;
+    int isFileDoesNotExist = 0;
+    int tripIndex, fileIndex, busIndex;
+    int hasTripID, isSameTripLength; 
+    // File Handling
+    StringfromDateDMY(fileName, tripDate, TRUE);
+    StringfromDateDMY(strDateOfTrip, tripDate, FALSE);
+    pFileBusTrip = fopen(fileName, "r");
+    isFileDoesNotExist = pFileBusTrip == NULL;
+    if (isFileDoesNotExist) {   
+        fclose(pFileBusTrip);
+        return EROR_FILE_NOT_FOUND;
+    }
+    int hasFoundPassenger = FALSE;
+    // Skip Unnecessary Lines;
     
-    return nFileWriteState;
+    tripIndex = 0;
+    fileIndex = 0;
+    while(hasFoundPassenger != -1){
+        hasFoundPassenger = tripFileGetPassenger(tripDate, &tempPassenger, fileIndex);
+        printf("%s\n", tempPassenger.tripNumber);
+        if(strcmp(tempPassenger.tripNumber, tripNumber) == 0){
+            BusOfTrip[tripIndex] = tempPassenger;
+            tripIndex++;
+        }
+        fileIndex++;
+    }
+
+    fclose(pFileBusTrip);
+    return tripIndex;
 }
 
 // |===| PASSENGER CMD SECTION |=====================|
@@ -447,19 +715,64 @@ void adminNoOfPassenger(){
     printSingleColorText( FG_YELLOW, strFiller);
 }
 
-void adminCountPassengerDropOff(){
+void adminCountPassengerDropOff(struct DateDMY *tripDate){
     String63 strFiller = "Admin counts number of Passenger in a drop-off.";
     printSingleColorText( FG_YELLOW, strFiller);
+    Bus16 BusTrip;
+    String255 DropOffs[16];
+    int DropOffCounts[16];
+    int NoOfUniqueDropOffs = 0;
+    TripNo inputTripNumber = ""; 
+
+
+    repeatGetTripNo(inputTripNumber, "CountPassenger", "\n\t> Trip Number:", "Please input an existing trip.");
+    printf("Trip: %s\n", inputTripNumber);
+    
+    int passengers = tripFileGetBusTrip(tripDate, inputTripNumber, BusTrip);
+    int i, j;
+    int foundSameDropOff;
+    if (passengers > 0) {
+        strcpy(DropOffs[0], BusTrip[0].dropOffPoint);
+        DropOffCounts[0] = 1;
+        for (i = 1; i < passengers; i++){
+            foundSameDropOff = FALSE;
+            for (j = 0; j < NoOfUniqueDropOffs && !foundSameDropOff; j++){
+                if(strcmp(DropOffs[j], BusTrip[i].dropOffPoint) == 0){
+                    foundSameDropOff = TRUE;
+                    DropOffCounts[j] += 1;
+                }
+            }
+
+            if(!foundSameDropOff){
+                strcpy(DropOffs[NoOfUniqueDropOffs], BusTrip[i].dropOffPoint);
+                DropOffCounts[NoOfUniqueDropOffs] = 1;
+                NoOfUniqueDropOffs++;
+            }
+        }
+
+        // for(i = 0; i < passengers; i++){
+        //     printPassenger(&BusTrip[i]);
+        // }
+
+        for(i = 0; i < NoOfUniqueDropOffs; i++){
+
+            printf("Drop Off: %s\n", DropOffs[i]);
+            printf("   Count: %d\n", DropOffCounts[i]);
+        }
+    }
 }
 
 void adminViewPassengerInfo(){
     String63 strFiller = "Admin views the passenger info.";
     printSingleColorText( FG_YELLOW, strFiller);
+    Bus16 BusTrip;
+
 }
 
 void adminSearchPassenger(){
     String63 strFiller = "Admin searches the passenger in a trip.";
     printSingleColorText( FG_YELLOW, strFiller);
+    
 }
 
 void adminEmbarkation(){
@@ -474,8 +787,8 @@ void adminEmbarkation(){
  * @brief Contains the functions accessible to a regular user 
  * 
  */
-void menuPassenger()
-{
+void 
+menuPassenger(){
     char inputPassMenu;
     String63 errorMessage = "Dear Passenger, Please select the following valid cmds\n";
     String15 graphicCode = "PassengerMenu";
@@ -508,6 +821,7 @@ void menuAdmin(){
     int isInputing = TRUE;
     int isChoosingAdminCmds = FALSE;
     char userInput;
+    struct DateDMY date;
     
     
     while (isInputing && !isChoosingAdminCmds)
@@ -516,12 +830,13 @@ void menuAdmin(){
     while (isChoosingAdminCmds){
         system("cls");
         repeatGetChar(&userInput, graphicCode, strPrompt, errorMessage);
+        date = GetDateToday();
         switch(userInput){
             case 'a':
                 adminNoOfPassenger();
                 break;
             case 'b':
-                adminCountPassengerDropOff();
+                adminCountPassengerDropOff(&date);
                 break;
             case 'c':
                 adminViewPassengerInfo();
