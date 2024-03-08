@@ -65,7 +65,7 @@ struct Passenger {
 
 
 
-typedef struct Passenger Bus16[13];
+typedef struct Passenger Bus16[13]; 
 
 
 // |===| Helpful Functions |=========================|
@@ -824,6 +824,15 @@ void userEmbarkation(){
     String63 strFiller = "User creates an embarkation trip.";
     printf("[O] Enter Trip Number: \n");
     printSingleColorText(BACKGROUND_GREEN, strFiller);
+
+    /*
+    - keep track if the user can be placed inside the trip
+    - create conditonals to place passenger and if bus full, 
+    create new bus (if 16 is full) or expand (if 13)
+    - use tripFileGetBusTrip
+    - take account priority of passenger
+    - use repeatGetChar for user error
+    */
 }
 
 // |===| ADMIN CMD SECTION ==========================|
