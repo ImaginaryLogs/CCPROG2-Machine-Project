@@ -11,3 +11,10 @@ Flowchart: https://www.canva.com/design/DAF8IgP-Wj4/oUyhcr6m3UvJy1DpY1iSNw/edit?
 
 # Quick Notes for Both of Us:
 Use this to run tests: " cmd /c ".\test.exe < input.txt > output.txt" "
+
+# Notes:
+
+Pseudocode
+int main(){
+    
+}

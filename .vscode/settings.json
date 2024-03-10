@@ -1,11 +1,4 @@
 {
-  "files.associations": {
-    "stdio.h": "c",
-    "string.h": "c",
-    "camporoanv_delacalzadawandar_functions.h": "c"
-  },
-  "cmake.configureOnOpen": true,
-  "C_Cpp.errorSquiggles": "enabled",
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",
   "C_Cpp_Runner.debuggerPath": "gdb",

@@ -2,14 +2,18 @@
 
 /**
  *
- * * TODO Fill it functions accessible to a general user based on the diagram.
+ * TODO Fill it functions accessible to a general user based on the diagram.
  * 
  */
 int 
 main()
 {
     char mainInput;
+    struct BusTrip Triplist[32];
+    struct TimeHM timeNow;
+    struct DateDMY dateNow;
     printGraphics("BusExpress");
+    //detectSaveFile();
     do {
         repeatGetChar(&mainInput, "MainMenu", "\t> Choice: ", "Dear user please input again correctly.");
         printf("\n");

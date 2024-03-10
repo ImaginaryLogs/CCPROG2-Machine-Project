@@ -1,0 +1,10 @@
+Input last name, first name, and middle initial:
+15: . 
+Received: "Monkey", "Luffy" 'D'.
+Translation: "Monkey, Luffy D."
+Result: "Monkey", "Luffy" 'D'.
+Input last name and first name only:
+12: o 
+Received: "Roronoa", "Zoro" .
+Translation: "Roronoa, Zoro"
+Result: "Roronoa", "Zoro" ' '.
