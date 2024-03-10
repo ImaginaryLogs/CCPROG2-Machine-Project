@@ -9,10 +9,14 @@ initializePassenger(struct Passenger *input){
     struct TimeHM exampleTime;
     exampleTime.hour = 7;
     exampleTime.minute = 30;
+    struct NameField exampleName;
+    strcpy(exampleName.firstName, "Juan");
+    strcpy(exampleName.lastName, "Dela Cruz");
+    exampleName.midI='A';
 
     strcpy(input->tripNumber, "AE101");
     strcpy(input->embarkationPoint, "DLSU Manila Campus - South Gate Driveway");
-    strcpy(input->passengerName, "Juan A. Dela Cruz");
+    input->passengerName;
     input->idNumber = 12345637;
     input->priorityNumber = 0;
     input->dateOfTrip = exampleDate;

@@ -8,11 +8,12 @@
  * REFERENCES:
  * [1] https://www.ibm.com/docs/en/zos/2.1.0?topic=functions-itoa-convert-int-into-string
  * [2] time_t: https://en.cppreference.com/w/c/chrono/time
- * [3] 
  */
 
 // |===| Define and Typedef |===================================|
 
+#define BUS_SIZE 16
+#define NUM_PASSENGER_DETAILS 5
 #define BG_WHITE (BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED)
 #define BG_BLACK (0x0)
 #define BG_RED BACKGROUND_RED
@@ -25,8 +26,6 @@
 #define EROR_FILE_NOT_FOUND -2
 
 
-typedef int ErrorInt;
-
 typedef char String511[512];
 typedef char String255[256];
 typedef char String127[128];
@@ -35,7 +34,7 @@ typedef char String31[32];
 typedef char String15[16];
 typedef char String7[8];
 typedef char TripNo[7];
-
+typedef int ErrorInt;
 struct TimeHM {
     unsigned int hour;
     unsigned int minute;
@@ -63,9 +62,19 @@ struct Passenger {
     unsigned int priorityNumber;
 };
 
+struct SearchResultField{
+    String255 result[BUS_SIZE];
+    int index[BUS_SIZE];
+    int size;
+};
 
+struct Bus16 {
+    struct Passenger Passengers[BUS_SIZE];
+    int volume;
+    struct TimeHM timeOfTrip;
+};
 
-typedef struct Passenger Bus16[13]; 
+typedef struct Passenger Bus16[13];
 
 
 // |===| Helpful Functions |=========================|
@@ -458,6 +467,20 @@ removeNewLine(char *strInput){
         strInput[strlen(strInput)-1] = '\0';
 }
 
+char *
+GetStringFromNameField(char *strName, struct NameField name){
+    int length;
+    strcat(strName, name.lastName);
+    strcat(strName, ", ");
+    strcat(strName, name.firstName);
+    if (name.midI != 0) {
+        strcat(strName, " ");
+        strcat(strName, &name.midI);
+        strcat(strName, ".");
+    }
+    return strName;
+}
+
 struct NameField
 GetNameFromString(char *strName){
     struct NameField output;
@@ -474,7 +497,6 @@ GetNameFromString(char *strName){
             for(subNIndex = 0; subNIndex < fullNIndex; subNIndex++)
                 output.lastName[subNIndex] = strName[subNIndex];
             output.lastName[subNIndex] = '\0';
-            
         } else if (strName[fullNIndex] == '.'){
 
             firstNameCeiling = fullNIndex - 2;
@@ -482,8 +504,8 @@ GetNameFromString(char *strName){
 
             for(subNIndex = firstNameFloor; subNIndex < firstNameCeiling; subNIndex++)
                 output.firstName[subNIndex - firstNameFloor] = strName[subNIndex];
-
-            output.firstName[firstNameCeiling - firstNameFloor + 1] = '\0';
+             
+            output.firstName[firstNameCeiling - firstNameFloor] = '\0';
         } else if (fullNIndex == stringLength - 1){
             strcpy(output.firstName, strName + firstNameFloor);
         }
@@ -493,6 +515,22 @@ GetNameFromString(char *strName){
 }
 
 // |===| Essential Functions Section |=====================|
+
+
+/**
+ * @brief Checks if the date today matches with internal date of the program
+ * @note   
+ * @retval 
+ */
+int
+checkDate(){
+
+}
+
+void
+loadCurrentState(){
+
+}
 
 void
 printPassenger(struct Passenger *Passenger){
@@ -510,7 +548,6 @@ printPassenger(struct Passenger *Passenger){
     printf("A Drop off Point:\t %s\n", Passenger->dropOffPoint);
     printf("#>-------------------------------#\n\n");
 }
-
 
 void 
 passwordMenu(int *isChoosingAdminCmds, int *isInputingPass, char *realPass){
@@ -532,7 +569,6 @@ passwordMenu(int *isChoosingAdminCmds, int *isInputingPass, char *realPass){
         printErrorMessage(strWrongPass);
     }
 }
-
 
 /**
  * @brief  
@@ -642,25 +678,20 @@ tripFileGetPassenger(struct DateDMY *tripDate, struct Passenger *keyPassenger, i
 }
 
 int
-tripFileGetDetail(struct DateDMY *tripDate, Bus16 BusTrip, String63 LastName, int keys[], struct NameField searchResults[], int size){
+tripFileReturnLastname(struct DateDMY *tripDate, String63 LastName, struct SearchResultField *nameResults){
     struct Passenger holder;
     FILE *pFileBusTrip;
     String255 temporaryBuffer = "";
     String255 strName = "";
     String15 fileName = "";
-    String15 strTimeOfTrip = "";
-    String15 strPriorityNumber = "";
-    String15 strIdNumber = "";
     struct TimeHM tempTime;
     struct NameField nameBuffer;
-    ErrorInt nIndex = -1;
-    int isFileDoesNotExist = 0;
-    int BusPassenger = 0;
-    int hasNotFoundEOF = TRUE;
+    int isFileDoesNotExist = FALSE;
     int hasFullSearches = FALSE;
+    int hasNotFoundEOF = TRUE;
     int numSubstring = 0;
-    int lineSearch = 0; 
-    int line;
+    int linesSearched = 0; 
+    int linesIgnored = 0;
     // File Handling
     StringfromDateDMY(fileName, tripDate, TRUE);
     pFileBusTrip = fopen(fileName, "r");
@@ -670,36 +701,41 @@ tripFileGetDetail(struct DateDMY *tripDate, Bus16 BusTrip, String63 LastName, in
         printErrorMessage("ERROR DOES NOT EXIST");
         return EROR_FILE_NOT_FOUND;
     }
+
     fgets(temporaryBuffer, 255, pFileBusTrip);
     fgets(temporaryBuffer, 255, pFileBusTrip);
+
     while (hasNotFoundEOF && !hasFullSearches){
         if (fgets(strName, 255, pFileBusTrip) == NULL) {
             fclose(pFileBusTrip);
-            hasNotFoundEOF = FALSE;
-        } else {
-            removeNewLine(strName);
-            nameBuffer = GetNameFromString(strName);
-            if (isSubString(LastName, nameBuffer.lastName) == TRUE){
-                searchResults[numSubstring] = nameBuffer;
-                keys[numSubstring] = lineSearch;
-                numSubstring++;
-                if (numSubstring == size)
-                    hasFullSearches = TRUE;
-            }
+            return numSubstring;
         }
-        for(line = 0; line < 6 && hasNotFoundEOF; line++)
+
+        removeNewLine(strName);
+        nameBuffer = GetNameFromString(strName);
+        if (isSubString(LastName, nameBuffer.lastName) == TRUE){
+            printf("%s\n",strName);
+            strcpy(nameResults->result[numSubstring], strName);
+            nameResults->index[numSubstring] = linesSearched;
+            numSubstring++;
+        }
+
+        if (numSubstring == BUS_SIZE)
+            hasFullSearches = TRUE;
+        // Other information is ignored
+        for(linesIgnored = 0; linesIgnored < 6 && hasNotFoundEOF; linesIgnored++)
             if (fgets(temporaryBuffer, 255, pFileBusTrip) == NULL) {
                 fclose(pFileBusTrip);
-                hasNotFoundEOF = FALSE;
+                return numSubstring;
             }
-        lineSearch++;
+        linesSearched++;
     }
     fclose(pFileBusTrip);
     return numSubstring;
 }
 
 int
-tripFileGetBusTrip(struct DateDMY *tripDate, TripNo inputTrip, Bus16 BusTrip){
+tripFileGetBusTrip(struct DateDMY *tripDate, TripNo inputTrip, struct Bus16 BusTrip){
     struct Passenger holder;
     FILE *pFileBusTrip;
     String255 temporaryBuffer = "";
@@ -745,12 +781,13 @@ tripFileGetBusTrip(struct DateDMY *tripDate, TripNo inputTrip, Bus16 BusTrip){
             removeNewLine(strIdNumber);
             removeNewLine(strPriorityNumber);
             removeNewLine(holder.dropOffPoint);
+
             holder.idNumber = atoi(strIdNumber);
             holder.priorityNumber = atoi(strPriorityNumber);
             holder.passengerName = GetNameFromString(strName);
             holder.timeOfTrip = tempTime;
             holder.timeOfTrip = TimeHMfromString(strTimeOfTrip);
-            BusTrip[BusPassenger] = holder;
+            BusTrip.Passengers[BusPassenger] = holder;
             BusPassenger++;
         } else if (hasNotFoundEOF) {
             for(line = 0; line < 6 ; line++)
@@ -777,7 +814,7 @@ tripFileSearchPassengerFull(struct DateDMY *tripDate, struct Passenger *keyPasse
 }
 
 int
-tripFileSearchSameTrip(struct DateDMY *tripDate, TripNo tripNumber, Bus16 BusOfTrip){
+tripFileSearchSameTrip(struct DateDMY *tripDate, TripNo tripNumber, struct Bus16 BusOfTrip){
     FILE *pFileBusTrip;
     String511 temporaryBuffer = "";
     String15 fileName = "";
@@ -806,7 +843,7 @@ tripFileSearchSameTrip(struct DateDMY *tripDate, TripNo tripNumber, Bus16 BusOfT
         hasFoundPassenger = tripFileGetPassenger(tripDate, &tempPassenger, fileIndex);
         printf("%s\n", tempPassenger.tripNumber);
         if(strcmp(tempPassenger.tripNumber, tripNumber) == 0){
-            BusOfTrip[tripIndex] = tempPassenger;
+            BusOfTrip.Passengers[tripIndex] = tempPassenger;
             tripIndex++;
         }
         fileIndex++;
@@ -816,74 +853,72 @@ tripFileSearchSameTrip(struct DateDMY *tripDate, TripNo tripNumber, Bus16 BusOfT
     return tripIndex;
 }
 
-
+void
+initializeSearchResult(struct SearchResultField * DropOffResults){
+    int i;
+    for (i = 0; i < BUS_SIZE; i++){
+        strcmp(DropOffResults->result[i], "");
+        DropOffResults->index[i] = 0;
+    }
+    DropOffResults->size = 0;
+}
 
 // |===| PASSENGER CMD SECTION |=====================|
 
-void userEmbarkation(){
+void 
+userEmbarkation(){ // Params: struct Passenger Passengers[16]
     String63 strFiller = "User creates an embarkation trip.";
     printf("[O] Enter Trip Number: \n");
     printSingleColorText(BACKGROUND_GREEN, strFiller);
-
-    /*
-    - keep track if the user can be placed inside the trip
-    - create conditonals to place passenger and if bus full, 
-    create new bus (if 16 is full) or expand (if 13)
-    - use tripFileGetBusTrip
-    - take account priority of passenger
-    - use repeatGetChar for user error
-    */
 }
 
 // |===| ADMIN CMD SECTION ==========================|
 
-void adminNoOfPassenger(){
+void 
+adminNoOfPassenger(){
     String63 strFiller = "Admin views a Trip's no. of Passenger";
     printSingleColorText( FG_YELLOW, strFiller);
-
 }
 
 void 
 adminCountPassengerDropOff(struct DateDMY *tripDate){
     String63 strFiller = "Admin counts number of Passenger in a drop-off.";
     printSingleColorText( FG_YELLOW, strFiller);
-    Bus16 BusTrip;
-    String255 DropOffs[16];
-    int DropOffCounts[16];
-    int NoOfUniqueDropOffs = 0;
+    struct Bus16 BusTrip;
+    struct SearchResultField DropOffResults;
+    
     TripNo inputTripNumber = ""; 
-
+    initializeSearchResult(&DropOffResults);
 
     repeatGetTripNo(inputTripNumber, "CountPassenger", "\n\t> Trip Number:", "Please input an existing trip.");
     printf("Trip: %s\n", inputTripNumber);
-    
-    int passengers = tripFileGetBusTrip(tripDate, inputTripNumber, BusTrip);
+    int results = tripFileGetBusTrip(tripDate, inputTripNumber, BusTrip);
     int i, j;
     int foundSameDropOff;
-    if (passengers > 0) {
-        strcpy(DropOffs[0], BusTrip[0].dropOffPoint);
-        DropOffCounts[0] = 1;
-        for (i = 1; i < passengers; i++){
+    printPassenger(&BusTrip.Passengers[15]);
+    if (results > 0) {
+        strcpy(DropOffResults.result[0], BusTrip.Passengers[0].dropOffPoint);
+        DropOffResults.index[0] = 1;
+        
+        for (i = 1; i < results; i++){
             foundSameDropOff = FALSE;
-            for (j = 0; j < NoOfUniqueDropOffs && !foundSameDropOff; j++){
-                if(strcmp(DropOffs[j], BusTrip[i].dropOffPoint) == 0){
+            for (j = 0; j < DropOffResults.size && !foundSameDropOff; j++){
+                if (strcmp(DropOffResults.result[j], BusTrip.Passengers[i].dropOffPoint) == 0){
                     foundSameDropOff = TRUE;
-                    DropOffCounts[j] += 1;
+                    DropOffResults.index[j] += 1;
                 }
             }
 
-            if(!foundSameDropOff){
-                strcpy(DropOffs[NoOfUniqueDropOffs], BusTrip[i].dropOffPoint);
-                DropOffCounts[NoOfUniqueDropOffs] = 1;
-                NoOfUniqueDropOffs++;
+            if (!foundSameDropOff){
+                strcpy(DropOffResults.result[DropOffResults.size], BusTrip.Passengers[i].dropOffPoint);
+                DropOffResults.index[DropOffResults.size] += 1;
+                DropOffResults.size++;
             }
         }
 
-
-        for(i = 0; i < NoOfUniqueDropOffs; i++){
-
-            printf("Drop Off: %s\n", DropOffs[i]);
-            printf("   Count: %d\n", DropOffCounts[i]);
+        for(i = 0; i < DropOffResults.size; i++){
+            printf("Drop Off: %s\n", DropOffResults.result[i]);
+            printf("   Count: %d\n", DropOffResults.index[i]);
         }
     }
 }
@@ -892,49 +927,50 @@ void
 adminViewPassengerInfo(struct DateDMY *tripDate){
     String63 strFiller = "Admin views the passenger info.";
     printSingleColorText( FG_YELLOW, strFiller);
-    Bus16 BusTrip;
-    String255 DropOffs[16];
-    int DropOffCounts[16];
-    int NoOfUniqueDropOffs = 0;
-    int passengers;
-    int i, j;
-    int foundSameDropOff;
-    int isDoneVieweing = FALSE;
+    struct Bus16 BusTrip;
     TripNo inputTripNumber = ""; 
+    String255 nameBuffer = "";
+    int passengers;
+    int i;
+    int j;
+    int isDoneVieweing = FALSE;
+    
 
     while (!isDoneVieweing){
+        printf("\n");
         repeatGetTripNo(inputTripNumber, "CountPassenger", "\n\t> Trip Number:", "Please input an existing trip. \n\tType \'0\' to exit.");
+        
         if (strcmp(inputTripNumber, "quit") == 0){
             isDoneVieweing = TRUE;
-        } else {
-            printf("Trip: %s\n", inputTripNumber);    
+            return;
+        }
+        printf("Trip: %s\n", inputTripNumber);    
+    
+        passengers = tripFileGetBusTrip(tripDate, inputTripNumber, BusTrip);
         
-            passengers = tripFileGetBusTrip(tripDate, inputTripNumber, BusTrip);
-            
-            if (passengers > 0) {
-                printf("Passengers of %s:\n", inputTripNumber);
-                printf("#=>----------------- - -\n");
-                for(i = 0; i < passengers; i++){
-                    printf("Y\tName: %s\n", BusTrip[i].passengerName);
-                    printf("|\tIDno: %d\n", BusTrip[i].idNumber);
-                    printf("A\tPriorityNo: %d\n", BusTrip[i].priorityNumber);
-                    printf("#=>----------------- - -\n");
-                }
-            } 
+        if (passengers > 0) {
+            printf("Passengers of %s:\n", inputTripNumber);
+            printf("#=>-------------------------- - -\n");
+            for(i = 0; i < passengers; i++){
+                printf("Y\tName: %s\n", GetStringFromNameField(nameBuffer, BusTrip.Passengers[i].passengerName));
+                strcpy(nameBuffer, "");
+                printf("|\tIDno: %d\n", BusTrip.Passengers[i].idNumber);
+                printf("A\tPriorityNo: %d\n", BusTrip.Passengers[i].priorityNumber);
+                printf("#=>-------------------------- - -\n");
+            }
         }
     }
 }
 
-void adminSearchPassenger(struct DateDMY *dateToday){
+void
+adminSearchPassenger(struct DateDMY *dateToday){
     String63 strFiller = "Admin searches the passenger in a trip.";
     printSingleColorText( FG_YELLOW, strFiller);
-    Bus16 BusTrip;
+    struct Bus16 BusTrip;
     struct Passenger searchingPassenger;
+    struct SearchResultField lastNameResults;
     struct NameField searchResults[16];
-    int keys[16] = {0};
-    int results = 0;
     int i;
-    int size = 16;
     String15 name;
     int userChoice;
     int isFinding = TRUE;
@@ -944,33 +980,34 @@ void adminSearchPassenger(struct DateDMY *dateToday){
         removeNewLine(name);
         if (strcmp(name, "quit") == 0){
             isFinding = FALSE;
-        } else {
-            results = tripFileGetDetail(dateToday, BusTrip, name, keys, searchResults, size);
-            isSearching = TRUE;
-            while (results > 0 && isSearching){
-                printGraphics("SearchResult1");
-                for(i = 0; i < results; i++){
-                    printf("| %02d) Name: \"%s, %s", i + 1, searchResults[i].lastName, searchResults[i].firstName);
-                    if (searchResults[i].midI){
-                        printf(" %c.\"\n", searchResults[i].midI);
-                    } else 
-                        printf("\"\n");
-                        
-                }
-                repeatGetInteger(&userChoice, "SearchResult2", "\t> Choice: ", "Not a number.");
-                if (userChoice == 0){
-                    isSearching = FALSE;
-                    system("cls");
-                } else {
-                    tripFileGetPassenger(dateToday, &searchingPassenger, keys[userChoice - 1]);
-                    printPassenger(&searchingPassenger);
-                }
-            }
-            if (!results){
+            return;
+        }
+
+        lastNameResults.size = tripFileReturnLastname(dateToday, name, &lastNameResults);
+        isSearching = TRUE;
+        if (!lastNameResults.size) {
+            system("cls");
+            printf("\nLast name: \"%s\" produces %d result.\n\n", name, lastNameResults.size);
+        }
+
+        while (lastNameResults.size > 0 && isSearching){
+            printGraphics("SearchResult1");
+
+            for(i = 0; i < lastNameResults.size; i++)
+                printf("| %02d) Name: \"%s\"\n", i + 1, lastNameResults.result[i]);
+
+            printGraphics("SearchResult2");
+            
+            repeatGetInteger(&userChoice, "SearchResult3", "\t> Choice: ", "Not a number.");
+            if (userChoice == -1) {
+                isSearching = FALSE;
                 system("cls");
-                printf("\nLast name: \"%s\" produces %d result.\n\n", name, results);
+            } else if (userChoice > 0) {
+                tripFileGetPassenger(dateToday, &searchingPassenger, lastNameResults.index[userChoice - 1]);
+                printPassenger(&searchingPassenger);
             }
         }
+          
         
     }
     
