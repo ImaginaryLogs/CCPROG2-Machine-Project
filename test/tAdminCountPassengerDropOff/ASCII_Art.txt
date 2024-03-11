@@ -23,6 +23,12 @@ $$ |  $$ |\$$$$$$$ |$$ | $$ | $$ |$$ |$$ |  $$ |
                                                 
                                                 
                                                 
+ID:EnterDate 5;
+#>==<|[?] Enter Date |>=====================#
+|                                           |
+|    Please enter Year, Month, and Day.     |
+|                                           |
+#>-----------------------------------------<#
 ID:MainMenu 7;
 #>==<|[?] Main Menu |>======================#
 Y                                           Y
@@ -38,7 +44,7 @@ Y                                           Y
 |    Type "quit" to exit.                   |
 A                                           A
 #>-----------------------------------------<#
-ID:AdminMenu 16;
+ID:AdminMenu 15;
 #>==<|[O] Admin Commands |>================<#
 Y                                           Y
 |    Accessed elevated CMDS. Allowed        |
@@ -51,8 +57,7 @@ Y                                           Y
 |    [c]: Check Passenger Info.             |
 |    [d]: Load Passenger Info.              |
 |    [e]: Search Passenger                  |
-|    [f]: Inform User                       |
-|    [g]: Go Back                           |
+|    [f]: Go Back                           |
 A                                           A
 #>-----------------------------------------<#
 ID:PassengerMenu 6;
@@ -63,9 +68,39 @@ ID:PassengerMenu 6;
 |                                           |
 #>-----------------------------------------<#
 ID:CountPassenger 6;
+
 #>==<|[*] Count Passenger |>===============<#
 |                                           |
 |   Please input the Trip Number to Count.  |
+|   Insert '0' to go back.                  |
+|                                           |
+#>-----------------------------------------<#
+ID:SearchPass 6;
+#>==<|[*] Check Passenger |>===============<#
+|                                           |
+|   Please input the Last Name of Passenger |
 |   Insert "quit" to go back.               |
 |                                           |
+#>-----------------------------------------<#
+ID:SearchResult1 2;
+#>==<|[*] Searches |>======================<#
+Y                                           Y
+ID:SearchResult2 2;
+A                                           A
+#\-----------------------------------------/#
+ID:SearchResult3 9;
+#/-----------------------------------------\#
+Y                                           Y
+|   Insert a number to perform actions      |
+|   Insert the following:                   |
+|        - '>0' to view individuals         |
+|        -  '0' to recheck search.          |
+|        - '-1' to quit                     |
+A                                           A
+#>-----------------------------------------<#                     
+ID:DropOff1 2;
+#>==<|[*] Drop Offs |>=====================<#
+Y                                           Y
+ID:DropOff2 2;
+A                                           A
 #>-----------------------------------------<#

@@ -6,6 +6,6 @@ int main(){
     exampleDate.month = 4;
     exampleDate.day = 1;
     Bus16 BusTrip;
-    printf("%d", tripFileSearchSameTrip(&exampleDate, "AE101", BusTrip));
+    printf("%d", tripFile_SearchSameTrip(&exampleDate, "AE101", BusTrip));
     return 0;
 }

@@ -47,6 +47,6 @@ main(){
     String15 dateApril = "";
     StringfromDateDMY(dateApril, &exampleDate, FALSE);
     printf("April: %s\n", dateApril);
-    printf("%d\n", tripFilePassengerAppender(exampleDate, &Juan));
+    printf("%d\n", tripFile_PassengerAppender(exampleDate, &Juan));
     printPassenger(&Juan);
 }

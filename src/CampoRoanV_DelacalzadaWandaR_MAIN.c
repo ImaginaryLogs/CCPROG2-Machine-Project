@@ -9,23 +9,26 @@ int
 main()
 {
     char mainInput;
-    struct BusTrip Triplist[32];
+    struct Bus16 Triplist[TOTAL_TRIPS];
     struct TimeHM timeNow;
     struct DateDMY dateNow;
     printGraphics("BusExpress");
-    //detectSaveFile();
+
+    repeatGetDateDMY(&dateNow);
+    
     do {
         repeatGetChar(&mainInput, "MainMenu", "\t> Choice: ", "Dear user please input again correctly.");
         printf("\n");
         system("cls");
         switch (mainInput) {
             case 'a':
-                menuAdmin();
+                menuAdmin(Triplist, TOTAL_TRIPS, &dateNow);
                 break;
             case 'b':
-                menuPassenger();
+                menuPassenger(Triplist, TOTAL_TRIPS, &dateNow);
                 break;
             case 'c':
+                
                 printSingleColorText(FG_RED, "[x] Terminating...\n\tPress any button again.");
                 getchar();
                 break;

@@ -9,6 +9,6 @@ int main(){
     int keys[16] = {0};
     int size = 16;
     String15 name = "Vegapunk";
-    printf("%d", tripFileReturnLastname(&exampleDate, BusTrip, name, keys, size));
+    printf("%d", tripFile_ReturnLastname(&exampleDate, BusTrip, name, keys, size));
     return 0;
 }

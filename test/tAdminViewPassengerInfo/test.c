@@ -3,9 +3,13 @@
 int
 main(){
     struct DateDMY date;
-    date.day = 1;
+    struct Bus16 Trips[22];
+
+    date.day = 2;
     date.month = 4;
     date.year = 2024;
-    adminViewPassengerInfo(&date);
+    
+    initializeBusTrip(Trips, 22, &date);
+    adminViewPassengerInfo(&date, Trips);
     return 0;
 }
