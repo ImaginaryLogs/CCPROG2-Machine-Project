@@ -469,7 +469,6 @@ removeNewLine(char *strInput){
 
 char *
 GetStringFromNameField(char *strName, struct NameField name){
-    int length;
     strcat(strName, name.lastName);
     strcat(strName, ", ");
     strcat(strName, name.firstName);
@@ -481,32 +480,48 @@ GetStringFromNameField(char *strName, struct NameField name){
     return strName;
 }
 
+void
+copySubnameFromName(char *strSubname, char *strFullname, int subnameStartingIndex, int subnameLastIndex){
+    int nCharPosOfSubname = 0;
+
+    for(nCharPosOfSubname = subnameStartingIndex; nCharPosOfSubname < subnameLastIndex; nCharPosOfSubname++)
+        strSubname[nCharPosOfSubname - subnameStartingIndex] = strFullname[nCharPosOfSubname];
+
+    strSubname[subnameLastIndex - subnameStartingIndex] = '\0';
+}
+/**
+ * @brief Breaksdown a full name into its individual components. 
+ * @param *strName: The string you want to breakdown. 
+ * @return A struct Namefield from the converted string.
+ * @note Pre-condition: strName is in the format of "lastname, firstName M." or "lastname, firstname"
+ */
 struct NameField
 GetNameFromString(char *strName){
     struct NameField output;
-    int fullNIndex;
-    int subNIndex;
+    int nCharPosOfFullname;
+    int hasSeenFirstName;
+    int hasSeenMiddileInitial;
+    int hasNoMiddleInitial;
     int stringLength = strlen(strName);
     int firstNameCeiling = 0;
     int firstNameFloor = 0;
-    for(fullNIndex = 0; fullNIndex < stringLength; fullNIndex++){
 
-        if(strName[fullNIndex] == ',') {
-            firstNameFloor = fullNIndex + 2;
-            
-            for(subNIndex = 0; subNIndex < fullNIndex; subNIndex++)
-                output.lastName[subNIndex] = strName[subNIndex];
-            output.lastName[subNIndex] = '\0';
-        } else if (strName[fullNIndex] == '.'){
-
-            firstNameCeiling = fullNIndex - 2;
-            output.midI = strName[fullNIndex - 1];
-
-            for(subNIndex = firstNameFloor; subNIndex < firstNameCeiling; subNIndex++)
-                output.firstName[subNIndex - firstNameFloor] = strName[subNIndex];
-             
-            output.firstName[firstNameCeiling - firstNameFloor] = '\0';
-        } else if (fullNIndex == stringLength - 1){
+    for(nCharPosOfFullname = 0; nCharPosOfFullname < stringLength; nCharPosOfFullname++){
+        // if Conditions
+        hasSeenFirstName = strName[nCharPosOfFullname] == ','; // Ceiling of last name section
+        hasSeenMiddileInitial = strName[nCharPosOfFullname] == '.'; // Ceiling of middle initial
+        hasNoMiddleInitial = nCharPosOfFullname + 1 == strlen(strName) && 
+                             strName[nCharPosOfFullname] != '.'; // Remember that the index starts at 0. So the index's ranges from 0 to strlen - 1, so Offset by 1 to make it from 1 to strlen.
+        
+        if (hasSeenFirstName) {
+            firstNameFloor = nCharPosOfFullname + 2;
+            copySubnameFromName(output.lastName, strName, 0, nCharPosOfFullname);
+        } else if (hasSeenMiddileInitial){
+            output.midI = strName[nCharPosOfFullname - 1];
+            firstNameCeiling = nCharPosOfFullname - 2; // Ceiling / last char of first name is two chars away from the middle initial.
+            copySubnameFromName(output.lastName, strName, firstNameFloor, firstNameCeiling);
+        } else if (hasNoMiddleInitial){
+            output.midI = '\0';
             strcpy(output.firstName, strName + firstNameFloor);
         }
     }
@@ -616,7 +631,7 @@ tripFilePassengerAppender(struct DateDMY tripDate, struct Passenger *newPassenge
 }
 
 int 
-tripFileGetPassenger(struct DateDMY *tripDate, struct Passenger *keyPassenger, int key){
+tripFileGetCurrentPassenger(struct DateDMY *tripDate, struct Passenger *keyPassenger, int key){
     FILE *pFileBusTrip;
     String255 temporaryBuffer = "";
     String255 strName = "";
@@ -806,7 +821,7 @@ tripFileSearchPassengerFull(struct DateDMY *tripDate, struct Passenger *keyPasse
     int isFound = 0;
     int key = -1;
     for(i = 0; i < 16 && !isFound; i++){
-        isFound = tripFileGetPassenger(tripDate, keyPassenger, i) == 0 ? TRUE : -1;
+        isFound = tripFileGetCurrentPassenger(tripDate, keyPassenger, i) == 0 ? TRUE : -1;
         if (isFound)
             key = i;
     }
@@ -840,7 +855,7 @@ tripFileSearchSameTrip(struct DateDMY *tripDate, TripNo tripNumber, struct Bus16
     tripIndex = 0;
     fileIndex = 0;
     while(hasFoundPassenger != -1){
-        hasFoundPassenger = tripFileGetPassenger(tripDate, &tempPassenger, fileIndex);
+        hasFoundPassenger = tripFileGetCurrentPassenger(tripDate, &tempPassenger, fileIndex);
         printf("%s\n", tempPassenger.tripNumber);
         if(strcmp(tempPassenger.tripNumber, tripNumber) == 0){
             BusOfTrip.Passengers[tripIndex] = tempPassenger;
@@ -1003,7 +1018,7 @@ adminSearchPassenger(struct DateDMY *dateToday){
                 isSearching = FALSE;
                 system("cls");
             } else if (userChoice > 0) {
-                tripFileGetPassenger(dateToday, &searchingPassenger, lastNameResults.index[userChoice - 1]);
+                tripFileGetCurrentPassenger(dateToday, &searchingPassenger, lastNameResults.index[userChoice - 1]);
                 printPassenger(&searchingPassenger);
             }
         }
