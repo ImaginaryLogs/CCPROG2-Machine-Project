@@ -344,12 +344,14 @@ initializeBusTrip(struct Bus16 Triplist[], int size, struct DateDMY *date, int i
         "AE150", "AE151", "AE152", "AE153", "AE154", 
         "AE155", "AE156", "AE157", "AE158", "AE159", "AE160"
     };
+    
     String7 Time[22] = {
          "6:00",  "7:30",  "9:30", "11:00", "13:00",
         "14:30", "15:30", "17:00", "18:15",
          "5:30",  "5:45",  "7:00",  "7:30",  "9:00",
         "11:00", "13:00", "14:30", "15:30", "17:00", "18:15"
     };
+    
     int i;
     int j;
     for(i = 0; i < 22; i++){
@@ -413,7 +415,7 @@ countWordFrequency(struct Bus16 BusTrip, int results){
             }
         }
 
-        if (!foundSameDropOff){
+        if (!foundSameDropOff) {
             strcpy(DropOffResults.result[DropOffResults.size], BusTrip.Passengers[resultIndex].dropOffPoint);
             DropOffResults.passengerIndex[DropOffResults.size] = 1;
             DropOffResults.size++;
@@ -428,6 +430,11 @@ countWordFrequency(struct Bus16 BusTrip, int results){
 void 
 userEmbarkation(){
     String63 strFiller = "User creates an embarkation trip.";
+    TripNo inputTrip = "";
+    
+    repeatGetTripNo(inputTrip, "None", "\t> Input Trip Number:", "Input a valid bus number.");
+
+
     printf("[O] Enter Trip Number: \n");
     printSingleColorText(BACKGROUND_GREEN, strFiller);
     //Get User
@@ -460,6 +467,7 @@ adminCountPassengerDropOff(struct DateDMY *tripDate, struct Bus16 Trips[]){
         results = tripStruct_GetBusTrip(tripDate, inputTripNumber, Trips, &pickedTrip);
         if (strcmp(inputTripNumber, "quit") == 0){
             isChoosing = FALSE;
+            return;
         } else if (results > 0) {            
             printf("Trip: %s %d\n", inputTripNumber, results);
             DropOffResults = countWordFrequency(pickedTrip, results);
@@ -538,19 +546,8 @@ adminEmbarkation(){
 // |===| MENU SECTION |=============================|
 
 /**
- * TODO:
- * Detects the current state of the program and picks up where the user left off.
- * > If the passenger is in the middle of something and quits, it will pick it up after. 
- * > If the user is admin, it asks for password and promptly returns back to the starting point.
- * If it cannot detect the corresponding trip file with the time, it asks the user for the date.
- * Keeps TimeHM Updated which restricts users.
- * 
- */
-
-/**
  * TODO fill it functions accessible to a passenger based on the diagram.
  * @brief Contains the functions accessible to a regular user 
- * 
  */
 void 
 menuPassenger(){
