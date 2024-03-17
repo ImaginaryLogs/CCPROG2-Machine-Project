@@ -50,19 +50,19 @@ main(){
     printf("April: %s\n", dateApril);
 
     printPopUpMessage("[?] Check at Key = 0", FG_YELLOW, "Check.");
-    printf("%d\n", tripFileGetPassenger(&exampleDate, &tempPassenger, 0));
+    printf("%d\n", tripFileGetCurrentPassenger(&exampleDate, &tempPassenger, 0));
     printPassenger(&tempPassenger);
 
     printPopUpMessage("[?] Check at Key = 1", FG_YELLOW, "Check.");
-    printf("%d\n", tripFileGetPassenger(&exampleDate, &tempPassenger, 1));
+    printf("%d\n", tripFileGetCurrentPassenger(&exampleDate, &tempPassenger, 1));
     printPassenger(&tempPassenger);
 
     printPopUpMessage("[?] Check at Key = 2", FG_YELLOW, "Check.");
-    printf("%d\n", tripFileGetPassenger(&exampleDate, &tempPassenger, 2));
+    printf("%d\n", tripFileGetCurrentPassenger(&exampleDate, &tempPassenger, 2));
     printPassenger(&tempPassenger);
 
     printPopUpMessage("[?] Check at Key = 3", FG_YELLOW, "Check.");
-    printf("%d\n", tripFileGetPassenger(&exampleDate, &tempPassenger, 3));
+    printf("%d\n", tripFileGetCurrentPassenger(&exampleDate, &tempPassenger, 3));
     printPassenger(&tempPassenger);
     return 0;
 }

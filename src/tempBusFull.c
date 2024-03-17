@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "src/CampoRoanV_DelacalzadaWandaR_Functions.h"
+#include "CampoRoanV_DelacalzadaWandaR_Functions.h"
 
 void printSeats13(int passCount) {  
     char seats13[5][3];
@@ -46,12 +46,11 @@ void printSeats13(int passCount) {
             printf("\n");
         }
     } else if (passCount != 0 || passCount > 13)
-        repeatGetChar(&passCount);
+        repeatGetInteger(&passCount, "None", "Please Enter a seat", "Error, not a char");
 }
 
 void printSeats16(int passCount) { 
     char seats16[4][4];
-    int passCount;
     int i, j;
 
     if (passCount == 0) {
@@ -88,5 +87,11 @@ void printSeats16(int passCount) {
             printf("\n");
         }
     } else if (passCount != 0 || passCount > 16)
-        repeatGetChar(&passCount);
+        repeatGetInteger(&passCount, "None", "Please Enter a seat", "Error, not a char");
+}
+
+int main(){
+    printSeats13(5);
+    printSeats16(5);
+    return 0;
 }
