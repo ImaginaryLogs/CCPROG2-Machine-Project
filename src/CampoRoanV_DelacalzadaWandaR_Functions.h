@@ -865,11 +865,35 @@ initializeSearchResult(struct SearchResultField * DropOffResults){
 
 // |===| PASSENGER CMD SECTION |=====================|
 
+ /*
+    - keep track if the user can be placed inside the trip
+    - create conditonals to place passenger and if bus full, 
+    create new bus (if 16 is full) or expand (if 13)
+    - use tripFileGetBusTrip
+    - take account priority of passenger
+    - use repeatGetChar for user error
+    */
+
 void 
 userEmbarkation(){ // Params: struct Passenger Passengers[16]
+    struct Bus16 BusTrip;
+    TripNo numInput;
+    char prioInput;
     String63 strFiller = "User creates an embarkation trip.";
-    printf("[O] Enter Trip Number: \n");
     printSingleColorText(BACKGROUND_GREEN, strFiller);
+
+    printf("Are you a priority passenger[Y/N]?");
+    scanf("%c", &prioInput);
+    printf("Enter Trip Number: \n");
+    scanf("%c", &numInput);
+
+    tripFileGetBusTrip(/*struct date*/, numInput, BusTrip);
+
+    if (prioInput == 'Y' || prioInput == 'y' && /*return for tripFileGetBusTrip*/){
+        //allow passenger to be placed in the bus
+    }
+    /* else if (p)*/
+
 }
 
 // |===| ADMIN CMD SECTION ==========================|
