@@ -904,10 +904,24 @@ userEmbarkation(){ // Params: struct Passenger Passengers[16]
 
     tripFileGetBusTrip(/*struct date*/, numInput, BusTrip);
 
-    if (prioInput == 'Y' || prioInput == 'y' && /*return for tripFileGetBusTrip*/){
-        //allow passenger to be placed in the bus
+    if (prioInput == 'Y' || prioInput == 'y' && /*return for full tripFileGetBusTrip*/){
+        if (/*bus == 13*/) {
+            //expand bus
+            //put passenger in bus
+        } else if (/*bus == 16*/) {
+            //remove no/least prio passenger
+            //replace with current prio passenger
+        }
     }
-    /* else if (p)*/
+    else if (prioInput == 'N' || prioInput == 'n' && /*return for full*/) {
+        if (/*bus == 13*/) {
+            //expand bus
+        } else if (/*bus == 16*/) {
+            //put in new bus
+        }
+    } else if ((prioInput == 'Y' || prioInput == 'y' || prioInput == 'N' || prioInput == 'n') && /*return for not full tripFileGetBusTrip*/){
+        //put passenger in bus right away
+    }
 
 }
 
