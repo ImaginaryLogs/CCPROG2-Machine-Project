@@ -2,31 +2,39 @@
 
 /**
  *
- * * TODO Fill it functions accessible to a general user based on the diagram.
+ * TODO Fill it functions accessible to a general user based on the diagram.
  * 
  */
 int 
 main()
 {
     char mainInput;
+    struct Bus16 Triplist[TOTAL_TRIPS];
+    struct TimeHM timeNow;
+    struct DateDMY dateNow;
     printGraphics("BusExpress");
+    repeatGetDateDMY(&dateNow);
+    initializeBusTrip(Triplist, TOTAL_TRIPS, &dateNow, 1);
     do {
+        printGraphics("BusExpress");
+        printf("Date Today YYYY/MM/DD: ");
+        printDate(&dateNow);
+        printf("\n");
         repeatGetChar(&mainInput, "MainMenu", "\t> Choice: ", "Dear user please input again correctly.");
         printf("\n");
-        system("cls");
         switch (mainInput) {
             case 'a':
-                menuAdmin();
+                menuAdmin(Triplist, TOTAL_TRIPS, &dateNow);
                 break;
             case 'b':
-                menuPassenger();
+                menuPassenger(Triplist);
                 break;
             case 'c':
                 printSingleColorText(FG_RED, "[x] Terminating...\n\tPress any button again.");
                 getchar();
                 break;
             default: // loop back to main menu
-                printErrorMessage("Invalid command, please select again.\n");
+                printErrorMessage("Invalid command, please select again.");
                 break;
         }
     } while (mainInput != 'c');

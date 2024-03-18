@@ -6,15 +6,15 @@ void printSeats13(int passCount) {
     char seats13[5][3];
     int i, j;
 
+    seats13[4][1] = '\0';
+    seats13[4][2] = '\0';
+
     if (passCount == 0) {
         for (int i = 0; i < 5; i++) {
             for (int j = 0; j < 3; j++) {
                 seats13[i][j] = 'O';
             }
         }
-
-        seats13[4][1] = '\0';
-        seats13[4][2] = '\0';
 
         printf("13 - Seater Bus: All Vacant\n");
         for (i = 0; i < 5; i++) {
@@ -32,12 +32,9 @@ void printSeats13(int passCount) {
             }
         }
         
-        for (i = 0; i < passCount; i++) {
+        for (i = 0; i < passCount; i++) 
             seats13[0][i] = 'X';
-        }
-        
-        seats13[4][1] = '\0';
-        seats13[4][2] = '\0';
+    
         
         for (i = 0; i < 5; i++) {
             for (j = 0; j < 3; j++) {
