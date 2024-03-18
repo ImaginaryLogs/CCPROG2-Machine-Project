@@ -290,26 +290,16 @@ printDropOffs(struct SearchResultField *DropOffResults){
 
 // |===| PASSENGER CMD SECTION |=====================|
 
+ /*
+    - keep track if the user can be placed inside the trip
+    - create conditonals to place passenger and if bus full, 
+    create new bus (if 16 is full) or expand (if 13)
+    - use tripFileGetBusTrip
+    - take account priority of passenger
+    - use repeatGetChar for user error
+    */
+
 void 
-userEmbarkation(Trips){
-    String63 strFiller = "User creates an embarkation trip.";
-    TripNo inputTrip = "";
-
-    printSingleColorText(BACKGROUND_GREEN, strFiller);
-    struct Bus16 busHolder;
-    int Passengers;
-    int isFinding = TRUE;
-    system("cls");
-    printSingleColorText( FG_YELLOW, strFiller);
-    do {
-        printTrips(Trips);
-        
-        
-    } while (isFinding);
-}
-
-
-void
 printTrips(struct Bus16 Trips[]){
     HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     int nColor = FG_WHITE;
@@ -347,6 +337,42 @@ printTrips(struct Bus16 Trips[]){
         SetConsoleTextAttribute(hConsoleOutput, FG_WHITE | BG_BLACK);
     }
     printGraphics("PassEmbark2");
+}
+
+void
+userEmbarkation(){ // Params: struct Passenger Passengers[16]
+    struct Bus16 BusTrip;
+    TripNo numInput;
+    char prioInput;
+    String63 strFiller = "User creates an embarkation trip.";
+    printSingleColorText(BACKGROUND_GREEN, strFiller);
+
+    printf("Are you a priority passenger[Y/N]?");
+    scanf("%c", &prioInput);
+    printf("Enter Trip Number: \n");
+    scanf("%c", &numInput);
+
+    tripFileGetBusTrip(/*struct date*/, numInput, BusTrip);
+
+    if (prioInput == 'Y' || prioInput == 'y' && /*return for full tripFileGetBusTrip*/){
+        if (/*bus == 13*/) {
+            //expand bus
+            //put passenger in bus
+        } else if (/*bus == 16*/) {
+            //remove no/least prio passenger
+            //replace with current prio passenger
+        }
+    }
+    else if (prioInput == 'N' || prioInput == 'n' && /*return for full*/) {
+        if (/*bus == 13*/) {
+            //expand bus
+        } else if (/*bus == 16*/) {
+            //put in new bus
+        }
+    } else if ((prioInput == 'Y' || prioInput == 'y' || prioInput == 'N' || prioInput == 'n') && /*return for not full tripFileGetBusTrip*/){
+        //put passenger in bus right away
+    }
+
 }
 
 // |===| ADMIN CMD SECTION ==========================|
