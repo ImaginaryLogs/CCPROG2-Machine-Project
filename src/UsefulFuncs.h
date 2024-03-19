@@ -42,6 +42,7 @@ struct TimeHM {
     int hour;
     int minute;
 };
+
 struct DateDMY {
     int day;
     int month;
@@ -226,13 +227,18 @@ printGraphics(char *graphicsID){
 
 int
 isInputSuccesful(int inputs, char closingChar, char *errorMessage){
-    if (inputs != 2 || closingChar != '\n'){
+    int isInputSuccessful = TRUE;
+    if (inputs != 2){
+        isInputSuccessful = FALSE;
         system("cls");
-        clearInput();
         printErrorMessage(errorMessage);
-        return FALSE;
     }
-    return TRUE;
+
+    if (closingChar != '\n') {
+        isInputSuccessful = FALSE;
+        clearInput();
+    }
+    return isInputSuccessful;
 }
 
 void
@@ -261,7 +267,6 @@ repeatGetTripNo(char *pInput, char choiceMenuGraphicsCode[], char *promtMessage,
                 strcat(pInput, strTripNumber);
             }
         }
-
     } while(isIncorrectInput);
 }
 
@@ -312,7 +317,7 @@ repeatGetString(char *pInput, int maxLength, char choiceMenuGraphicsCode[], char
  * @param choiceMenuGraphicsCode[]: String pointer of the Graphics Code of the corresponding Graphics to print in ASCII_Art.txt.
  * @param promtMessage[]: String pointer of the prompt that tells the user what to input.
  * @param errorMessage[]: String pointer of the Error message to be given to the console.
-* Pre-condition: Scanned Input is within the range of an Integer defined by the Computer. ASCII_Art.txt file exist and its metadata aligned, choiceMenuGraphicsCode given exist in ASCII_Art.txt, and promtMessage and errorMessage have been declared and initialized.
+ * Pre-condition: Scanned Input is within the range of an Integer defined by the Computer. ASCII_Art.txt file exist and its metadata aligned, choiceMenuGraphicsCode given exist in ASCII_Art.txt, and promtMessage and errorMessage have been declared and initialized.
  */
 void
 repeatGetInteger(int *pInput, char choiceMenuGraphicsCode[], char promtMessage[], char errorMessage[]){
@@ -375,6 +380,12 @@ printDate(struct DateDMY *date){
     printf("%d, %s %d", date->year, strMonths[date->month - 1], date->day);
 };
 
+/**
+ * @brief  
+ * @note   
+ * @param  *pInput: 
+ * @retval 
+ */
 void
 repeatGetDateDMY(struct DateDMY *pInput){
     String63 errorMessage = "Please input the correct format.";
@@ -447,7 +458,6 @@ repeatGetDateDMY(struct DateDMY *pInput){
                     printErrorMessage(validationErrorMessage);
             }
         }
-
     } while (isIncorrectInput);
 }
 

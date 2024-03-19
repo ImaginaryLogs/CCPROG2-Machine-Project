@@ -340,9 +340,10 @@ printTrips(struct Bus16 Trips[]){
 }
 
 void
-userEmbarkation(){ // Params: struct Passenger Passengers[16]
+userEmbarkation(struct Bus16 Trips[]){ // Params: struct Passenger Passengers[16]
     struct Bus16 BusTrip;
     TripNo numInput;
+    int Passengers;
     char prioInput;
     String63 strFiller = "User creates an embarkation trip.";
     printSingleColorText(BACKGROUND_GREEN, strFiller);
@@ -350,26 +351,36 @@ userEmbarkation(){ // Params: struct Passenger Passengers[16]
     printf("Are you a priority passenger[Y/N]?");
     scanf("%c", &prioInput);
     printf("Enter Trip Number: \n");
-    scanf("%c", &numInput);
+    // printTrips(Trips[])
+    repeatGetTripNo(numInput, "PassEmbark3", "\t> Please Input Trip No: ", "Enter a valid one.");
 
-    tripFileGetBusTrip(/*struct date*/, numInput, BusTrip);
-
-    if (prioInput == 'Y' || prioInput == 'y' && /*return for full tripFileGetBusTrip*/){
-        if (/*bus == 13*/) {
-            //expand bus
-            //put passenger in bus
-        } else if (/*bus == 16*/) {
-            //remove no/least prio passenger
-            //replace with current prio passenger
-        }
+    if (strcmp(numInput, "quit") == 0){
+        return;
     }
-    else if (prioInput == 'N' || prioInput == 'n' && /*return for full*/) {
-        if (/*bus == 13*/) {
-            //expand bus
-        } else if (/*bus == 16*/) {
-            //put in new bus
-        }
-    } else if ((prioInput == 'Y' || prioInput == 'y' || prioInput == 'N' || prioInput == 'n') && /*return for not full tripFileGetBusTrip*/){
+
+    Passengers = tripStruct_GetBusTrip(numInput, Trips, &BusTrip);
+    // Passengers = tripStruct_GetBusTrip(inputTrip, Trips, &busHolder);
+    // if (Passengers <= 13)
+    //     printSeats13(busHolder.volume);
+    // else if (Passengers < 16)
+    //     printSeats16(busHolder.volume);
+    // getchar();
+
+    if (prioInput == 'Y' || prioInput == 'y' && Passengers > 12 /*return for full tripFileGetBusTrip */){
+        // if (/*bus == 13*/) {
+        //     //expand bus
+        //     //put passenger in bus
+        // } else if (/*bus == 16*/) {
+        //     //remove no/least prio passenger
+        //     //replace with current prio passenger
+        // }
+    } else if (prioInput == 'N' || prioInput == 'n' && Passengers > 12 /*return for full*/) {
+        // if (/*bus == 13*/) {
+        //     //expand bus
+        // } else if (/*bus == 16*/) {
+        //     //put in new bus
+        // }
+    } else if ((prioInput == 'Y' || prioInput == 'y' || prioInput == 'N' || prioInput == 'n') && Passengers < 12 /*return for not full tripFileGetBusTrip*/){
         //put passenger in bus right away
     }
 
@@ -432,10 +443,12 @@ adminCountPassengerDropOff(struct Bus16 Trips[]){
     while (isChoosing) {
         repeatGetTripNo(inputTripNumber, "CountPassenger", "\n\t> Trip Number:", "Please input an existing trip.");
         results = tripStruct_GetBusTrip(inputTripNumber, Trips, &pickedTrip);
+
         if (strcmp(inputTripNumber, "quit") == 0){
             isChoosing = FALSE;
             return;
         }
+
         system("cls");
         printGraphics("DropOff1");
         printf("| Trip: %s \n| Results: %d\n", inputTripNumber, results);
@@ -457,7 +470,6 @@ adminViewPassengerInfo(struct DateDMY *tripDate, struct Bus16 BusTrips[]){
     int passengers;
     
     while (!isDoneVieweing) {
-        
         repeatGetTripNo(inputTripNumber, "CountPassenger", "\n\t> Trip Number:", "Please input an existing trip. \n\tType \'0\' to exit.");
         if (strcmp(inputTripNumber, "quit") == 0)
             return;
