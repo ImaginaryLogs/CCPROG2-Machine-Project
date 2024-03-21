@@ -114,3 +114,31 @@ Y                                                              Y
 |   Please Input the Trip Number you want to board on.         |
 A                                                              A
 #>------------------------------------------------------------<#
+ID:PassEmbark4 27;
+#>==<|[*] Identification |>===================================<#
+Y                                                              Y
+|   [1]: Faculty and ASF with Inter-campus assignments         |
+|                                                              |
+|   [2]: Students with...                                      |
+|       > Inter-campus enrolled subjects; or                   |
+|       > enrolled in thesis using Inter-campus facilities     |
+|                                                              |
+|   [3]: Researchers                                           |
+|                                                              |
+|   [4]: School Administrators                                 |
+|       > Academic Coordinators level and up                   |
+|           for Faculty and ASF; and                           |
+|       > Director level and up                                |
+|           for APSP                                           |
+|                                                              |
+|   [5]: University Fellows                                    |
+|                                                              |
+|   [6]: Employees and Students with official business         |
+A                                                              A
+#>-----<#>----------------------------------------------------<#
+Y  ###  Y                                                      Y
+| #UWU# |   Please enter your Identification honestly!         |
+|  ###  |                                                      |
+|       |       Thank you for your cooperation.                |
+A %###% A                                                      A
+#>-----<#>----------------------------------------------------<#

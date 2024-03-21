@@ -1,3 +1,4 @@
+
 #include "CampoRoanV_DelacalzadaWandaR_Functions.h"
 
 /**
@@ -8,13 +9,15 @@
 int 
 main()
 {
+    struct dropOffPointList exits[4];
     char mainInput;
     struct Bus16 Triplist[TOTAL_TRIPS];
     struct TimeHM timeNow;
     struct DateDMY dateNow;
     printGraphics("BusExpress");
     repeatGetDateDMY(&dateNow);
-    initializeBusTrip(Triplist, TOTAL_TRIPS, &dateNow, 1);
+    initializeDropOffPointList(exits);
+    initializeBusTrip(Triplist, TOTAL_TRIPS, &dateNow, 1, exits);
     do {
         printGraphics("BusExpress");
         printf("Date Today YYYY/MM/DD: ");
@@ -24,10 +27,10 @@ main()
         printf("\n");
         switch (mainInput) {
             case 'a':
-                menuAdmin(Triplist, TOTAL_TRIPS, &dateNow);
+                menuAdmin(Triplist, TOTAL_TRIPS, &dateNow, &exits);
                 break;
             case 'b':
-                menuPassenger(Triplist);
+                menuPassenger(Triplist, &exits);
                 break;
             case 'c':
                 printSingleColorText(FG_RED, "[x] Terminating...\n\tPress any button again.");
