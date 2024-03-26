@@ -9,36 +9,146 @@
 
 // |===| PASSENGER CMD SECTION |=====================|
 
+
+/**
+ * @brief  Searches the exit. 
+ * @param exits[]: 
+ * @param dropOffToFind: 
+ * @param *returnedExit: 
+ * @retval 1 if found
+ * @retval 0 if does not exist
+ */
+int
+searchExitFromDropOffList(struct dropOffPointList exits[], String255 dropOffToFind, char *returnedExit){
+    int isDropOffFound = FALSE;
+    int i, j;
+
+    for (i = 0; i < 4 && isDropOffFound; i++){
+        for (j = 0; j < exits->size && !isDropOffFound; j++){
+            if (strcmp(exits[i].dropOffs[j], dropOffToFind) == 0){
+                strcpy(returnedExit, exits[i].route);
+                isDropOffFound = TRUE;
+            }
+        }
+    }
+
+    return isDropOffFound;
+}
+
+void setUpBusTrip(struct Bus16 *BusTrip, struct Bus16 TripDatabase[], struct Passenger *newPassenger, int *loc,  struct dropOffPointList *exits){
+    String255 assignedRoute = "";
+    BusTrip->Passengers[BusTrip->volume] = *newPassenger;
+    BusTrip->volume++;
+
+    if (searchExitFromDropOffList(exits, newPassenger->dropOffPoint, assignedRoute))
+        strcpy(BusTrip->route, assignedRoute);
+    else
+        printErrorMessage("Error! Trip not returned");
+
+    TripDatabase[*loc] = *BusTrip;
+}
+
+void addPassengers(struct Bus16 *BusTrip, struct Bus16 TripDatabase[], struct Passenger *newPassenger, int *loc){
+    BusTrip->Passengers[BusTrip->volume] = *newPassenger;
+    BusTrip->volume++;
+    TripDatabase[*loc] = *BusTrip;
+}
+
 void
-userEmbarkation(struct Bus16 Trips[], struct dropOffPointList *exits){ // Params: struct Passenger Passengers[16]
+switchPassengers(struct Passenger *passengerSRCE, struct Passenger *passengerDEST){
+    struct Passenger holdingPassengerSpot;
+    holdingPassengerSpot = *passengerSRCE;
+    *passengerSRCE = *passengerDEST;
+    *passengerDEST = holdingPassengerSpot;
+}
+
+
+int 
+findingAlternativeTrip(int *isOriginalTripFull, int origTripLocation, struct Bus16 *BusTrip, struct Bus16 TripDatabase[], struct Passenger *newPassenger, struct DropOffList exits[]){
+    
+    int i, j;
+    int tripRanges;
+    int hasEntered;
+    int hasTransferee = FALSE;
+    String127 wantedRoute = "";
+
+    searchExitFromDropOffList(exits, newPassenger->dropOffPoint, &wantedRoute);
+     
+    while (*isOriginalTripFull) {
+        tripRanges = (origTripLocation < 9) ? 9 : 20;
+        hasEntered = FALSE;
+        for (i = origTripLocation; i < tripRanges && !hasEntered; i++) {
+            if (strcmp(TripDatabase[i].route, wantedRoute) == 0) {
+                for(j = 0; j < 16 && !hasEntered; j++){
+                    if (TripDatabase[i].Passengers[j].priorityNumber < newPassenger->priorityNumber){
+                        switchPassengers(TripDatabase[i].Passengers + j, newPassenger);
+                        hasTransferee = TRUE;
+                        hasEntered = TRUE;
+                        isOriginalTripFull = FALSE;
+                        printPassenger(&newPassenger);
+                        printf("Has been kicked out. Transferring...\n");
+                    }
+                }
+            }
+        }
+
+        if (i == tripRanges || !hasEntered) {
+            printf("All normal trips gone.\n");
+            *isOriginalTripFull = FALSE;
+        }
+    }
+    return hasTransferee;
+}
+
+void transferingPassenger(int *hasTransferee, int origTripLocation, struct Bus16 *BusTrip, struct Bus16 TripDatabase[], struct Passenger *newPassenger, struct DropOffList exits[]){
+    while (hasTransferee) {
+            tripRanges = (loc + 1 < 9) ? 9 : (loc + 1 == 10) ? -1 : (loc + 1 > 10 && loc + 1 < 20) ? 20 : -1;
+            hasEntered = FALSE;
+            for(i = loc + 1; i < tripRanges && !hasEntered; i++) {
+                for(j = 0; j < 16 && !hasEntered; j++){
+                    if (TripDatabase[i].Passengers[j].priorityNumber < transfreePassenger.priorityNumber){
+                        transfreePassenger = TripDatabase[i].Passengers[j];
+                        TripDatabase[i].Passengers[j] = newPassenger;
+                        hasTransferee = TRUE;
+                        hasEntered = TRUE;
+                        isOriginalTripFull = FALSE;
+                        printPassenger(&transfreePassenger);
+                        printf("Has been kicked out. Transferring...\n");
+                    }
+                }
+            }
+        }
+}
+
+void
+userEmbarkation(struct Bus16 TripDatabase[], struct dropOffPointList exits[]){ // Params: struct Passenger Passengers[16]
     struct Bus16 BusTrip;
     struct Passenger newPassenger;
     struct Passenger transfreePassenger;
-    struct Passenger holdingPassengerSpot;
+    
     TripNo numInput;
     int Passengers;
     int isFinding = TRUE;
     int prioInput;
     int i, j;
     int loc;
-    int tripRanges;
-    int hasEntered;
-    int hasNotEnteredOriginalTrip = FALSE;
+    
+    int isOriginalTripFull = FALSE;
     int hasTransferee = FALSE;
-    int isSearchingDropOff = TRUE;
+    
     String63 strFiller = "User creates an embarkation trip.";
     printSingleColorText(BACKGROUND_GREEN, strFiller);
 
     while (isFinding){
-        hasNotEnteredOriginalTrip = FALSE;
-        printTrips(Trips);
+        isOriginalTripFull = FALSE;
+        printTrips(TripDatabase);
         repeatGetTripNo(numInput, "PassEmbark3", "\t> Please Input Trip No: ", "Enter a valid one.");
 
         if (strcmp(numInput, "quit") == 0){
             return;
         }
 
-        Passengers = tripStruct_GetBusTrip(numInput, Trips, &BusTrip, &loc);
+        Passengers = tripStruct_GetBusTrip(numInput, TripDatabase, &BusTrip, &loc);
 
         repeatGetString(&newPassenger.passengerName.firstName, 63, "PassEmbark4", "\t> First Name ", "Please enter within the range.");
         repeatGetString(&newPassenger.passengerName.lastName, 63, "PassEmbark4", "\t> Last Name ", "Please enter within the range.");
@@ -50,65 +160,16 @@ userEmbarkation(struct Bus16 Trips[], struct dropOffPointList *exits){ // Params
             printSeats16(BusTrip.volume);
 
         if (BusTrip.volume == 0){
-            BusTrip.Passengers[BusTrip.volume] = newPassenger;
-            BusTrip.volume++;
-            for (i = 0; i < 4 && isSearchingDropOff; i++){
-                for (j = 0; j < exits->size && isSearchingDropOff; j++){
-                    if (strcmp(exits->dropOffs[j], newPassenger.dropOffPoint) == 0){
-                        strcpy(BusTrip.route, exits->route);
-                        isSearchingDropOff = FALSE;
-                    }
-                }
-            }
-            Trips[loc] = BusTrip;
-        } else if (BusTrip.volume > 0 && BusTrip.volume < 14) {
-            BusTrip.Passengers[BusTrip.volume] = newPassenger;
-            BusTrip.volume++;
-            Trips[loc] = BusTrip;
+            setUpBusTrip(&BusTrip, TripDatabase, &newPassenger, &loc, exits);
+        } else if (BusTrip.volume > 0 && BusTrip.volume < 17) {
+            addPassengers(&BusTrip, TripDatabase, &newPassenger, &loc);
         } else {
-            hasNotEnteredOriginalTrip = TRUE;
+            isOriginalTripFull = TRUE;
         }
 
-        while (hasNotEnteredOriginalTrip){
-            tripRanges = (loc < 9) ? 9 : 20;
-            hasEntered = FALSE;
-            for(i = loc; i < tripRanges && !hasEntered; i++) {
-                for(j = 0; j < 16 && !hasEntered; j++){
-                    if (Trips[i].Passengers[j].priorityNumber < newPassenger.priorityNumber){
-                        holdingPassengerSpot = Trips[i].Passengers[j];
-                        Trips[i].Passengers[j] = transfreePassenger;
-                        transfreePassenger = holdingPassengerSpot;
-                        hasTransferee = TRUE;
-                        hasEntered = TRUE;
-                        hasNotEnteredOriginalTrip = FALSE;
-                        printPassenger(&transfreePassenger);
-                        printf("Has been kicked out. Transferring...\n");
-                    }
-                }
-            }
+        findingAlternativeTrip(&isOriginalTripFull, &loc, &BusTrip, &TripDatabase, &newPassenger, exits);
 
-            if (i == tripRanges || tripRanges == -1) {
-                printf("All normal trips gone.\n");
-            }
-        }
-
-        while (hasTransferee){
-            tripRanges = (loc + 1 < 9) ? 9 : (loc + 1 == 10) ? -1 : (loc + 1 > 10 && loc + 1 < 20) ? 20 : -1;
-            hasEntered = FALSE;
-            for(i = loc + 1; i < tripRanges && !hasEntered; i++) {
-                for(j = 0; j < 16 && !hasEntered; j++){
-                    if (Trips[i].Passengers[j].priorityNumber < transfreePassenger.priorityNumber){
-                        transfreePassenger = Trips[i].Passengers[j];
-                        Trips[i].Passengers[j] = newPassenger;
-                        hasTransferee = TRUE;
-                        hasEntered = TRUE;
-                        hasNotEnteredOriginalTrip = FALSE;
-                        printPassenger(&transfreePassenger);
-                        printf("Has been kicked out. Transferring...\n");
-                    }
-                }
-            }
-        }
+        transferingPassenger(&isOriginalTripFull, &loc, &BusTrip, &TripDatabase, &newPassenger, exits)
 
     }
     
