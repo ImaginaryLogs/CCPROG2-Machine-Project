@@ -229,24 +229,32 @@ userEmbarkation(struct Bus16 TripDatabase[], struct dropOffPointList exits[]){ /
  */
 void 
 adminNoOfPassenger(struct Bus16 Trips[]){
+    struct Bus16 busHolder;
     String63    strFiller = "Admin views a Trip's no. of Passenger";
     TripNo      inputTrip = "";
-    struct Bus16 busHolder;
     int Passengers          = 0;
     int wantedTripIndex     = 0;
-    int isFinding = TRUE;
+    int isChoiceConfirmed   = FALSE;
+    int isFinding           = TRUE;
 
     system("cls");
     printSingleColorText( FG_YELLOW, strFiller);
 
     do {
         printTrips(Trips);
-        repeatGetTripNo(inputTrip, "PassEmbark3", "\t> Please Input Trip No: ", "Enter a valid one.");
 
-        if (strcmp(inputTrip, "quit") == 0){
-            isFinding = 0;
-            return;
+        isChoiceConfirmed = FALSE;
+        while(!isChoiceConfirmed){
+            printGraphics("CountPassenger");
+            validateUserInput(&isChoiceConfirmed, &isFinding, "Please choose whether to count or not.");
         }
+        
+        if (!isFinding)
+            isFinding = 0;
+        else
+            return;
+
+        repeatGetTripNo(inputTrip, "PassEmbark3", "\t> Please Input Trip No: ", "Enter a valid one.");
 
         Passengers = tripStruct_SearchBusTrip(inputTrip, Trips, &busHolder, &wantedTripIndex);
 
@@ -283,7 +291,6 @@ adminCountPassengerDropOff(struct Bus16 TripDatabase[]){
     while (isChoosing) {
 
         isChoiceConfirmed = FALSE;
-
         while(!isChoiceConfirmed){
             printGraphics("CountPassenger");
             validateUserInput(&isChoiceConfirmed, &isChoosing, "Please choose whether to count or not.");

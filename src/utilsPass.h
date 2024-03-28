@@ -5,16 +5,18 @@
 void
 printPassenger(struct Passenger *Passenger){
     printf("\n#>---<|[>] Result >--------------------------------------------#\n");
-    printf("Y Trip Number:\t\t %s\n", Passenger->tripNumber);
-    printf("| Embarkation Point:\t %s\n", Passenger->embarkationPoint);
-    printf("| Passenger Name:\t %s, %s ", Passenger->passengerName.lastName, Passenger->passengerName.firstName);
+    printf("Y\n");
+    printf("|   Trip Number:\t\t %s\n", Passenger->tripNumber);
+    printf("|   Embarkation Point:\t %s\n", Passenger->embarkationPoint);
+    printf("|   Passenger Name:\t %s, %s ", Passenger->passengerName.lastName, Passenger->passengerName.firstName);
     if (Passenger->passengerName.midI){
         printf("%c.", Passenger->passengerName.midI);
     }
     printf("\n");
-    printf("| ID Number:\t\t %u\n", Passenger->idNumber);
-    printf("| Priority Number:\t %u\n", Passenger->priorityNumber);
-    printf("A Drop off Point:\t %s\n", Passenger->dropOffPoint);
+    printf("|   ID Number:\t\t %u\n", Passenger->idNumber);
+    printf("|   Priority Number:\t %u\n", Passenger->priorityNumber);
+    printf("|   Drop off Point:\t %s\n", Passenger->dropOffPoint);
+    printf("A\n");
     printf("#>--------------------------------------------------------------#\n\n");
 }
 
@@ -34,19 +36,39 @@ printBus16 (struct Bus16 Trip){
 
 void
 printPassengerInfo (TripNo inputTripNumber, struct Bus16 *BusTrip, int passengers){
+    struct Bus16 sortedBusTrip;
+    struct Passenger tempHolder;
     String255 nameBuffer = "";    
     int i;
-
+    int j;
+    int min;
+    sortedBusTrip = *BusTrip;
     if (passengers > 0){   
-        printf("Passengers of %s:\n", inputTripNumber);
-        printf("#=>--------------------------- - -\n");
-        for(i = 0; i < passengers; i++){
-            printf("Y\tName: %s\n", GetStringFromNameField(nameBuffer, BusTrip->Passengers[i].passengerName));
-            strcpy(nameBuffer, "");
-            printf("|\tIDno: %d\n", BusTrip->Passengers[i].idNumber);
-            printf("A\tPriorityNo: %d\n", BusTrip->Passengers[i].priorityNumber);
-            printf("#=>-------------------------- - -\n");
+        for(i = 0; i < passengers - 1; i++){
+            min = i;
+            for (j = i; j < passengers; j++){
+                if (sortedBusTrip.Passengers[j].priorityNumber < sortedBusTrip.Passengers[min].priorityNumber){
+                    min = j;
+                }
+            }
+            if (min != j){
+                tempHolder = sortedBusTrip.Passengers[j];
+                sortedBusTrip.Passengers[i] = sortedBusTrip.Passengers[min];
+                sortedBusTrip.Passengers[min] = tempHolder;
+            }
         }
+        printf("Passengers of %s:\n", inputTripNumber);
+        printf("#>-No-<#> Priority No.<#> ID  Number <#> Name ----------------<#\n");
+        printf("Y      Y               Y              Y\n");
+        for(i = 0; i < passengers; i++){
+            printf("|  %02d  ", i);
+            printf("|       %d       |", BusTrip->Passengers[i].priorityNumber);
+            printf("   %d   |", BusTrip->Passengers[i].idNumber);
+            printf(" %s \n", GetStringFromNameField(nameBuffer, BusTrip->Passengers[i].passengerName));
+            strcpy(nameBuffer, "");
+        }
+        printf("A      A               A              A\n");
+        printf("#>----<#>-------------<#>------------<#>----------------------<#\n");
     } else {
         printErrorMessage("Trip not yet created.\n");
     }
@@ -969,7 +991,7 @@ countWordFrequency (struct Bus16 BusTrip, int returnedPassengers){
     // SORTING ALGORITHM for Search Results
     for(i = 0; i < DropOffResults.size - 1; i++){
         max = i;
-        for(j = 1; j < DropOffResults.size; j++){
+        for(j = i; j < DropOffResults.size; j++){
             // Since ASCII value of '2' > '1', then STRING of max > STRING of j, then strcmp > 0. 
             // All drop-offs start with a number, so arrange increasingly to align.
             if (strcmp(DropOffResults.result[max], DropOffResults.result[j]) > 0)
