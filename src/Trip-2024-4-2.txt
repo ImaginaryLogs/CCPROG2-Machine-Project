@@ -1,0 +1,71 @@
+AE101
+DLSU Manila Campus - South Gate Driveway
+Monkey, Luffy D.
+12300001
+2
+1st drop-off point - Mamplasan Toll Exit
+
+Roronoa, Zoro E.
+12300002
+2
+2nd drop-off point - Phase 5, San Jose Village
+
+Cocoyasi, Nami F.
+12300003
+2
+3rd drop-off point - Milagros Del Rosario (MRR) Building - East Canopy
+
+Sogeking, Usopp G.
+12300004
+2
+1st drop-off point - Mamplasan Toll Exit
+
+Vinsmoke, Sanji H.
+12300005
+2
+2nd drop-off point - Phase 5, San Jose Village
+
+Tony Tony, Chopper I.
+12300006
+2
+3rd drop-off point - Milagros Del Rosario (MRR) Building - East Canopy
+
+Robin, Nico J.
+12300007
+2
+1st drop-off point - Mamplasan Toll Exit
+
+Flam, Franky K.
+12300008
+2
+2nd drop-off point - Phase 5, San Jose Village
+
+Season, Jinbe M.
+12300010
+2
+1st drop-off point - Mamplasan Toll Exit
+
+Nefertari, Vivi O.
+12300012
+2
+3rd drop-off point - Milagros Del Rosario (MRR) Building - East Canopy
+
+Nefertari, Karoo P.
+12300013
+2
+1st drop-off point - Mamplasan Toll Exit
+
+Neptune, Shirahoshi Q.
+12300014
+2
+2nd drop-off point - Phase 5, San Jose Village
+
+Riku, Rebecca R.
+12300015
+2
+3rd drop-off point - Milagros Del Rosario (MRR) Building - East Canopy
+
+Kozuki, Momonosuke S.
+12300016
+2
+1st drop-off point - Mamplasan Toll Exit

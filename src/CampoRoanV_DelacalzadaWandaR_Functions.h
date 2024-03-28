@@ -9,49 +9,16 @@
 
 // |===| PASSENGER CMD SECTION |=====================|
 
-
-/**
- * @brief  Searches the exit. 
- * @param exits[]: 
- * @param dropOffToFind: 
- * @param *returnedExit: 
- * @retval 1 if found
- * @retval 0 if does not exist
- */
-int
-searchExitFromDropOffList(struct dropOffPointList exits[], String255 dropOffToFind, char *returnedExit){
-    int isDropOffFound = FALSE;
-    int i, j;
-
-    for (i = 0; i < 4 && isDropOffFound; i++){
-        for (j = 0; j < exits->size && !isDropOffFound; j++){
-            if (strcmp(exits[i].dropOffs[j], dropOffToFind) == 0){
-                strcpy(returnedExit, exits[i].route);
-                isDropOffFound = TRUE;
-            }
-        }
-    }
-
-    return isDropOffFound;
+void 
+addPassengers(struct Bus16 TripDatabase[], struct Passenger *newPassenger, int *loc){
+    TripDatabase[*loc].Passengers[TripDatabase[*loc].volume] = *newPassenger;
+    TripDatabase[*loc].volume++;
 }
 
-void setUpBusTrip(struct Bus16 *BusTrip, struct Bus16 TripDatabase[], struct Passenger *newPassenger, int *loc,  struct dropOffPointList *exits){
-    String255 assignedRoute = "";
-    BusTrip->Passengers[BusTrip->volume] = *newPassenger;
-    BusTrip->volume++;
-
-    if (searchExitFromDropOffList(exits, newPassenger->dropOffPoint, assignedRoute))
-        strcpy(BusTrip->route, assignedRoute);
-    else
-        printErrorMessage("Error! Trip not returned");
-
-    TripDatabase[*loc] = *BusTrip;
-}
-
-void addPassengers(struct Bus16 *BusTrip, struct Bus16 TripDatabase[], struct Passenger *newPassenger, int *loc){
-    BusTrip->Passengers[BusTrip->volume] = *newPassenger;
-    BusTrip->volume++;
-    TripDatabase[*loc] = *BusTrip;
+void 
+setUpBusTrip(struct Bus16 *BusTrip, struct Bus16 TripDatabase[], struct Passenger *newPassenger, int *loc,  struct dropOffPointList *exits){
+    addPassengers(TripDatabase, newPassenger, loc);
+    strcpy(TripDatabase[*loc].route, newPassenger->route);
 }
 
 void
@@ -64,123 +31,193 @@ switchPassengers(struct Passenger *passengerSRCE, struct Passenger *passengerDES
 
 
 int 
-findingAlternativeTrip(int *isOriginalTripFull, int origTripLocation, struct Bus16 *BusTrip, struct Bus16 TripDatabase[], struct Passenger *newPassenger, struct DropOffList exits[]){
-    
-    int i, j;
-    int tripRanges;
-    int hasEntered;
-    int hasTransferee = FALSE;
-    String127 wantedRoute = "";
+findingAlternativeTrip(int origTripLocation, struct Bus16 TripDatabase[], struct Passenger *newPassenger, struct dropOffPointList exits[]){   
+    // Boolean Conditions
+    int hasEntered          = FALSE;
+    int needSpecialBus      = FALSE;
+    int hasTranferee        = TRUE;
 
-    searchExitFromDropOffList(exits, newPassenger->dropOffPoint, &wantedRoute);
-     
-    while (*isOriginalTripFull) {
-        tripRanges = (origTripLocation < 9) ? 9 : 20;
+    int transferringTripLoc = 0;
+    int tripRanges          = 0;
+    int i = 0;
+    int passengerIndex = 0;
+    
+    struct Passenger transferringPerson;
+    struct Bus16 BusTrip;
+    
+    transferringPerson = *newPassenger;
+    transferringTripLoc = origTripLocation + 1;
+
+    if (transferringTripLoc < 9) {
+        tripRanges = 9;
+    } else if (transferringTripLoc == 9) {
+        needSpecialBus = TRUE;
+        transferringTripLoc = 21;
+    } else if (transferringTripLoc < 20) {
+        tripRanges = 20;
+    } else {
+        needSpecialBus = TRUE;
+        transferringTripLoc = 22;
+    }
+    
+    while (hasTranferee && !needSpecialBus) {
         hasEntered = FALSE;
-        for (i = origTripLocation; i < tripRanges && !hasEntered; i++) {
-            if (strcmp(TripDatabase[i].route, wantedRoute) == 0) {
-                for(j = 0; j < 16 && !hasEntered; j++){
-                    if (TripDatabase[i].Passengers[j].priorityNumber < newPassenger->priorityNumber){
-                        switchPassengers(TripDatabase[i].Passengers + j, newPassenger);
-                        hasTransferee = TRUE;
-                        hasEntered = TRUE;
-                        isOriginalTripFull = FALSE;
-                        printPassenger(&newPassenger);
-                        printf("Has been kicked out. Transferring...\n");
+        for (i = transferringTripLoc; i < tripRanges && !hasEntered; i++){
+            if (TripDatabase[i].volume < 16 && strcmp(TripDatabase[i].route, transferringPerson.route) == 0){
+
+                hasTranferee    = FALSE;
+                hasEntered      = TRUE;
+
+                addPassengers(TripDatabase, &transferringPerson, &i);
+                printPassenger(&transferringPerson);
+                printf("%s has been added to %s. \n", transferringPerson.passengerName.lastName, TripDatabase[i].TripID);
+            } else if (strcmp(TripDatabase[i].route, transferringPerson.route) == 0) {
+                for(passengerIndex = 0; passengerIndex < 16 && !hasEntered; passengerIndex++){
+            
+                    if (TripDatabase[i].Passengers[passengerIndex].priorityNumber > transferringPerson.priorityNumber){
+                        hasTranferee    = TRUE;
+                        hasEntered      = TRUE;
+
+                        switchPassengers(TripDatabase[i].Passengers + passengerIndex, &transferringPerson);
+                        
+                        printSingleColorText( FG_RED , "WARNING, Passenger of the following kicked out:\n");
+                        printPassenger(&transferringPerson);
+                        printf("%s Has been kicked out by %s in trip %s.", transferringPerson.passengerName.lastName, TripDatabase[i].Passengers[passengerIndex].passengerName.lastName, TripDatabase[i].TripID);
+                        printf("Transferring...\n\n");
                     }
                 }
             }
         }
 
-        if (i == tripRanges || !hasEntered) {
-            printf("All normal trips gone.\n");
-            *isOriginalTripFull = FALSE;
+        if (!hasEntered) {
+            needSpecialBus = TRUE;
+            *newPassenger = transferringPerson;
         }
     }
-    return hasTransferee;
+
+    return hasTranferee;
 }
 
-void transferingPassenger(int *hasTransferee, int origTripLocation, struct Bus16 *BusTrip, struct Bus16 TripDatabase[], struct Passenger *newPassenger, struct DropOffList exits[]){
-    while (hasTransferee) {
-            tripRanges = (loc + 1 < 9) ? 9 : (loc + 1 == 10) ? -1 : (loc + 1 > 10 && loc + 1 < 20) ? 20 : -1;
-            hasEntered = FALSE;
-            for(i = loc + 1; i < tripRanges && !hasEntered; i++) {
-                for(j = 0; j < 16 && !hasEntered; j++){
-                    if (TripDatabase[i].Passengers[j].priorityNumber < transfreePassenger.priorityNumber){
-                        transfreePassenger = TripDatabase[i].Passengers[j];
-                        TripDatabase[i].Passengers[j] = newPassenger;
-                        hasTransferee = TRUE;
-                        hasEntered = TRUE;
-                        isOriginalTripFull = FALSE;
-                        printPassenger(&transfreePassenger);
-                        printf("Has been kicked out. Transferring...\n");
-                    }
-                }
+int
+assignSpecialTrip(struct Passenger *transferringPerson, struct Bus16 TripDatabase[], struct dropOffPointList exits[]){
+    String127 wantedDropOff = "";
+    
+    int hasEnterableMNLBus  = FALSE;
+    int hasEnterableLAGBus  = FALSE;
+    int isConfirmed         = FALSE;
+    int isFindingDropOff    = FALSE;
+    int hasEntered          = FALSE;
+    int specialChoice       = 0;
+    int loc;
+
+    hasEnterableMNLBus  =   strcmp(transferringPerson->embarkationPoint, "DLSU Manila Campus - South Gate Driveway") == 0 &&
+                            TripDatabase[20].volume < 16;
+    hasEnterableLAGBus  =   strcmp(transferringPerson->embarkationPoint, "DLSU Laguna Campus - Milagros Del Rosario (MRR) Building - East Canopy") == 0 &&
+                            TripDatabase[21].volume < 16;
+    isFindingDropOff = FALSE;
+
+    if (hasEnterableMNLBus){
+        while(!isFindingDropOff){
+            isConfirmed = FALSE;
+
+            printf("Dear %s %s, a special event occured with your trip:\n", transferringPerson->passengerName.firstName, transferringPerson->passengerName.lastName);
+            repeatGetInteger(&specialChoice, "Special1", "You have entered a Special Shuttle; \n\tPlease select your drop-off Point:", "Enter");
+            
+            if (specialChoice >= 0 && specialChoice < 3)
+                strcpy(wantedDropOff, exits[0].dropOffs[specialChoice]);
+
+            while(!isConfirmed && specialChoice >= 0 && specialChoice < 3){
+                printf("New drop-off: %s\n", wantedDropOff);
+                validateUserInput(&isConfirmed, &isFindingDropOff, "Error, please decide if this is the Drop-off you want.");
             }
         }
+        loc = 20;
+        strcpy(transferringPerson->tripNumber, "SP101");
+        strcpy(transferringPerson->dropOffPoint, wantedDropOff);
+
+        addPassengers(TripDatabase, transferringPerson, &loc);
+        printf("%s has been added to %s. \n", transferringPerson->passengerName.lastName, TripDatabase[20].TripID);
+        hasEntered = TRUE;
+    } else if (hasEnterableLAGBus) {
+        while(!isFindingDropOff){
+            isConfirmed = FALSE;
+
+            printf("Dear %s %s, a special event occured with your trip:\n", transferringPerson->passengerName.firstName, transferringPerson->passengerName.lastName);
+            repeatGetInteger(&specialChoice, "Special2", "You have entered a Special Shuttle, please select your drop-off Point:", "Enter");
+            
+            if (specialChoice >= 0 && specialChoice < 4)
+                strcpy(wantedDropOff, exits[2].dropOffs[specialChoice]);
+
+            while(!isConfirmed && specialChoice >= 0 && specialChoice < 4){
+                printf("New drop-off: %s\n", wantedDropOff);
+                validateUserInput(&isConfirmed, &isFindingDropOff, "Error, please decide if this is the Drop-off you want.");
+            }
+        }
+        loc = 21;
+        strcpy(transferringPerson->tripNumber, "SP150");
+        strcpy(transferringPerson->dropOffPoint, wantedDropOff);
+
+        addPassengers(TripDatabase, &transferringPerson, &loc);
+        printf("%s has been added to %s. \n", transferringPerson->passengerName.lastName, TripDatabase[21].TripID);
+        hasEntered = TRUE;
+    } else {
+        printf("Sorry, all trips have been occupied.");
+    }
+    return hasEntered;
 }
 
 void
 userEmbarkation(struct Bus16 TripDatabase[], struct dropOffPointList exits[]){ // Params: struct Passenger Passengers[16]
-    struct Bus16 BusTrip;
-    struct Passenger newPassenger;
-    struct Passenger transfreePassenger;
-    
-    TripNo numInput;
-    int Passengers;
-    int isFinding = TRUE;
-    int prioInput;
-    int i, j;
-    int loc;
-    
-    int isOriginalTripFull = FALSE;
-    int hasTransferee = FALSE;
+    struct Passenger    newPassenger;
+    struct Passenger    transfreePassenger;
+    struct Bus16    BusTrip;
+    String255   validationError = "Error, please decide if you want to embark based on the info.";
+    TripNo      numInput;
+    int isChoosingToInput   = TRUE;
+    int isEmbarking         = TRUE;
+    int hasTransferee       = FALSE;
+    int tripIndex   = 0;
+    int Passengers  = 0;
+    int i   = 0;
+    int j   = 0;
     
     String63 strFiller = "User creates an embarkation trip.";
-    printSingleColorText(BACKGROUND_GREEN, strFiller);
+    printSingleColorText(FG_GREEN, strFiller);
 
-    while (isFinding){
-        isOriginalTripFull = FALSE;
+    while (isEmbarking) {
+        isChoosingToInput = TRUE;
         printTrips(TripDatabase);
-        repeatGetTripNo(numInput, "PassEmbark3", "\t> Please Input Trip No: ", "Enter a valid one.");
 
-        if (strcmp(numInput, "quit") == 0){
-            return;
+        while (isChoosingToInput){
+            printf("Do you want to embark?\n");
+            validateUserInput(&isChoosingToInput, &isEmbarking, validationError);
         }
 
-        Passengers = tripStruct_GetBusTrip(numInput, TripDatabase, &BusTrip, &loc);
+        if (isEmbarking)
+            return;
 
-        repeatGetString(&newPassenger.passengerName.firstName, 63, "PassEmbark4", "\t> First Name ", "Please enter within the range.");
-        repeatGetString(&newPassenger.passengerName.lastName, 63, "PassEmbark4", "\t> Last Name ", "Please enter within the range.");
-        repeatGetInteger(&newPassenger.priorityNumber, "PassEmbark4", "\t> Pass Ranking: ", "Please enter within the range.");
+        printTrips(TripDatabase);
+        repeatGetPassenger(&newPassenger, TripDatabase, exits);
+
+        Passengers = tripStruct_SearchBusTrip(newPassenger.tripNumber, TripDatabase, &BusTrip, &tripIndex);
 
         if (Passengers <= 13)
             printSeats13(BusTrip.volume);
         else if (Passengers < 16)
             printSeats16(BusTrip.volume);
 
-        if (BusTrip.volume == 0){
-            setUpBusTrip(&BusTrip, TripDatabase, &newPassenger, &loc, exits);
-        } else if (BusTrip.volume > 0 && BusTrip.volume < 17) {
-            addPassengers(&BusTrip, TripDatabase, &newPassenger, &loc);
+        if (BusTrip.volume == 0) {
+            setUpBusTrip(&BusTrip, TripDatabase, &newPassenger, &tripIndex, exits);
+        } else if (BusTrip.volume > 0 && BusTrip.volume < 16) {
+            addPassengers(TripDatabase, &newPassenger, &tripIndex);
         } else {
-            isOriginalTripFull = TRUE;
+            hasTransferee = findingAlternativeTrip(tripIndex, TripDatabase, &newPassenger, exits);
         }
 
-        findingAlternativeTrip(&isOriginalTripFull, &loc, &BusTrip, &TripDatabase, &newPassenger, exits);
-
-        transferingPassenger(&isOriginalTripFull, &loc, &BusTrip, &TripDatabase, &newPassenger, exits)
-
+        if (hasTransferee)
+            assignSpecialTrip(&newPassenger, TripDatabase, exits);
+        
     }
-    
-
-    // if (prioInput == 'Y' || prioInput == 'y' && Passengers > 12 /*return for full tripFileGetBusTrip */){
-
-    // } else if (prioInput == 'N' || prioInput == 'n' && Passengers > 12 /*return for full*/) {
-
-    // } else if ((prioInput == 'Y' || prioInput == 'y' || prioInput == 'N' || prioInput == 'n') && Passengers < 12 /*return for not full tripFileGetBusTrip*/){
-    //     //put passenger in bus right away
-    // }
 
 }
 
@@ -192,14 +229,16 @@ userEmbarkation(struct Bus16 TripDatabase[], struct dropOffPointList exits[]){ /
  */
 void 
 adminNoOfPassenger(struct Bus16 Trips[]){
-    String63 strFiller = "Admin views a Trip's no. of Passenger";
-    TripNo inputTrip = "";
+    String63    strFiller = "Admin views a Trip's no. of Passenger";
+    TripNo      inputTrip = "";
     struct Bus16 busHolder;
-    int Passengers;
-    int loc;
+    int Passengers          = 0;
+    int wantedTripIndex     = 0;
     int isFinding = TRUE;
+
     system("cls");
     printSingleColorText( FG_YELLOW, strFiller);
+
     do {
         printTrips(Trips);
         repeatGetTripNo(inputTrip, "PassEmbark3", "\t> Please Input Trip No: ", "Enter a valid one.");
@@ -209,13 +248,13 @@ adminNoOfPassenger(struct Bus16 Trips[]){
             return;
         }
 
-        Passengers = tripStruct_GetBusTrip(inputTrip, Trips, &busHolder, &loc);
+        Passengers = tripStruct_SearchBusTrip(inputTrip, Trips, &busHolder, &wantedTripIndex);
+
         if (Passengers <= 13)
             printSeats13(busHolder.volume);
         else if (Passengers < 16)
             printSeats16(busHolder.volume);
-        getchar();
-        
+
     } while (isFinding);
 }
 
@@ -226,12 +265,13 @@ adminNoOfPassenger(struct Bus16 Trips[]){
  * @param Trips[]: 
  */
 void 
-adminCountPassengerDropOff(struct Bus16 Trips[]){
+adminCountPassengerDropOff(struct Bus16 TripDatabase[]){
     String63 strFiller = "Admin counts number of Passenger in a drop-off.";
     TripNo inputTripNumber = ""; 
     
     struct Bus16 pickedTrip;
     struct SearchResultField DropOffResults;
+    int isChoiceConfirmed = FALSE;
     int isChoosing = TRUE;
     int userChoice;
     int results;
@@ -241,15 +281,28 @@ adminCountPassengerDropOff(struct Bus16 Trips[]){
     printSingleColorText(FG_YELLOW, strFiller);
 
     while (isChoosing) {
+
+        isChoiceConfirmed = FALSE;
+
+        while(!isChoiceConfirmed){
+            printGraphics("CountPassenger");
+            validateUserInput(&isChoiceConfirmed, &isChoosing, "Please choose whether to count or not.");
+        }
+
+        if (!isChoosing)
+            isChoosing = !isChoosing;
+        else
+            return;
+
         repeatGetTripNo(inputTripNumber, "CountPassenger", "\n\t> Trip Number:", "Please input an existing trip.");
-        results = tripStruct_GetBusTrip(inputTripNumber, Trips, &pickedTrip, &loc);
+        results = tripStruct_SearchBusTrip(inputTripNumber, TripDatabase, &pickedTrip, &loc);
 
         if (strcmp(inputTripNumber, "quit") == 0){
             isChoosing = FALSE;
             return;
         }
 
-        system("cls");
+        //system("cls");
         printGraphics("DropOff1");
         printf("| Trip: %s \n| Results: %d\n", inputTripNumber, results);
         if (results > 0) {            
@@ -257,6 +310,7 @@ adminCountPassengerDropOff(struct Bus16 Trips[]){
             printDropOffs(&DropOffResults);
         }
         printGraphics("DropOff3");
+
     }
 }
 
@@ -264,11 +318,11 @@ adminCountPassengerDropOff(struct Bus16 Trips[]){
  * @brief  
  * @note   
  * @param  *tripDate: 
- * @param  BusTrips[]: 
+ * @param  TripDatabase[]: 
  * @retval None
  */
 void 
-adminViewPassengerInfo(struct Bus16 BusTrips[]){
+adminViewPassengerInfo(struct Bus16 TripDatabase[]){
     String63 strFiller = "Admin views the passenger info.";
     printSingleColorText( FG_YELLOW, strFiller);
     struct Bus16 BusHolder;
@@ -279,11 +333,12 @@ adminViewPassengerInfo(struct Bus16 BusTrips[]){
 
     while (!isDoneVieweing) {
         repeatGetTripNo(inputTripNumber, "CountPassenger", "\n\t> Trip Number:", "Please input an existing trip. \n\tType \'0\' to exit.");
+        
         if (strcmp(inputTripNumber, "quit") == 0)
             return;
         
         printf("Trip: %s\n", inputTripNumber);    
-        passengers = tripStruct_GetBusTrip(inputTripNumber, BusTrips, &BusHolder, &loc);
+        passengers = tripStruct_SearchBusTrip(inputTripNumber, TripDatabase, &BusHolder, &loc);
         
         printPassengerInfo(inputTripNumber, &BusHolder, passengers);
     }
@@ -309,6 +364,7 @@ adminSearchPassenger(struct Bus16 Trips[]){
         repeatGetString(nameToSearch, 15, "SearchPass", "\t> Last Name: ", "Error, not a last name");
         printf("\n");
         removeNewline(nameToSearch);
+
         if (strcmp(nameToSearch, "quit") == 0)
             return;
         
@@ -318,20 +374,105 @@ adminSearchPassenger(struct Bus16 Trips[]){
     }
 }
 
-/**
- * @brief  
- * @note   
- * @retval None
- */
+
 void 
-adminEmbarkation(struct Bus16 Trips[]){
+adminEmbarkation(struct Bus16 TripDatabase[], struct dropOffPointList exits[]){
+    struct Passenger    newPassenger;
+    struct Passenger    transfreePassenger;
+    struct Bus16    newBusTripDatabase[22];
+    struct Bus16    newBusTrip;
+    struct DateDMY      date;
+    String255   validationError = "Error, please decide if you want to embark based on the info.";
+    TripNo      numInput;
+    int isChoosingToInput   = TRUE;
+    int isEmbarking         = TRUE;
+    int hasTransferee       = FALSE;
+    int tripIndex   = 0;
+    int Passengers  = 0;
+    int i   = 0;
+    int j   = 0;
+
     String63 strFiller = "Admin creates an embarkation trip.";
     printSingleColorText( FG_YELLOW, strFiller);
-    int isEmbarking = TRUE;
 
-    while (isEmbarking){
+    while (isEmbarking) {
+        
+        isChoosingToInput = TRUE;
+        printTrips(TripDatabase);
 
+        while (isChoosingToInput){
+            printf("Do you want to embark?\n");
+            validateUserInput(&isChoosingToInput, &isEmbarking, validationError);
+        }
+
+        if (isEmbarking)
+            return;
+
+        printTrips(TripDatabase);
+
+        repeatGetDateDMY(&date);
+        tripFile_GetBusTrip(&date, newBusTripDatabase, exits);
+
+        for (i = 0; i < TOTAL_TRIPS; i++){
+            Passengers = newBusTripDatabase[i].volume;
+
+            if (Passengers > 0 && Passengers <= 16) {
+                hasTransferee = FALSE;
+
+                for (j = 0; j < Passengers; j++){
+                    transfreePassenger = newBusTripDatabase[i].Passengers[j];
+                    if (TripDatabase[i].volume < 16)
+                        addPassengers(TripDatabase, &transfreePassenger, &i);
+                    else if (i < 20) // special trips are 20 and 21
+                        hasTransferee = findingAlternativeTrip(i, TripDatabase, &newPassenger, exits);
+                }
+
+                if (hasTransferee)
+                    hasTransferee = assignSpecialTrip(&newPassenger, TripDatabase, exits);
+                
+                if (hasTransferee){
+                    printf("Passenger has been dropped:\n");
+                    printPassenger(&newPassenger);
+                }
+            }
+        }
     }
+}
+
+void
+adminLoadFile(struct Bus16 TripDatabase[], struct dropOffPointList *exits){
+    FILE *databaseFile;
+    struct DateDMY  date;
+    String31 fileName;
+    String63 validationError = "Error, please choose whether or not you want to load the file.";
+    repeatGetDateDMY(&date);
+    int isFileExist;
+    int isConfirmed = FALSE;
+    int isChoosingFile = TRUE;
+    
+    while (isChoosingFile){
+        StringfromDateDMY(fileName, &date, TRUE);
+        databaseFile = fopen(fileName, "r");
+        if (databaseFile == NULL)
+            isFileExist = FALSE;
+        else 
+            isFileExist = TRUE;
+        fclose(databaseFile);
+
+        if (!isFileExist) {
+            printSingleColorText(FG_RED, "File does not exist.\n");
+        }
+
+        isConfirmed = FALSE;
+        while (!isConfirmed && isFileExist){
+            printSingleColorText(FG_GREEN, "File does exist. Continue with Load?\n");
+            validateUserInput(&isConfirmed, &isChoosingFile, &validationError);
+        }
+
+        if (isConfirmed && isFileExist)
+            tripFile_GetBusTrip(&date, TripDatabase, exits);
+    }
+    
 }
 
 // |===| MENU SECTION |=============================|
@@ -349,11 +490,13 @@ menuPassenger(struct Bus16 Trips[], struct dropOffPointList *exits){
     do {
         repeatGetChar(&inputPassMenu, graphicCode, strPrompt, errorMessage);
         switch(inputPassMenu) {
+            case 'A':
             case 'a':
                 userEmbarkation(Trips, exits);
                 break;
             default:
                 printErrorMessage(errorMessage);
+            case 'B':
             case 'b':
                 break;
         }
@@ -367,7 +510,7 @@ menuPassenger(struct Bus16 Trips[], struct dropOffPointList *exits){
  * 
  */
 void 
-menuAdmin(struct Bus16 BusTrip[], int size, struct DateDMY *date, struct dropOffPointList *exits){
+menuAdmin(struct Bus16 BusTrip[], int size, struct DateDMY *date, struct dropOffPointList exits[]){
     String255 realPass = "Admin123"; // to be changed
     String63 errorMessage = "Please input a valid admin cmd.\n";
     String15 graphicCode = "AdminMenu";
@@ -382,23 +525,34 @@ menuAdmin(struct Bus16 BusTrip[], int size, struct DateDMY *date, struct dropOff
     while (isChoosingAdminCmds){
         system("cls");
         repeatGetChar(&userInput, graphicCode, strPrompt, errorMessage);
+
         switch(userInput){
+            case 'A':
             case 'a':
                 adminNoOfPassenger(BusTrip);
                 break;
+            case 'B':
             case 'b':
                 adminCountPassengerDropOff(BusTrip);
                 break;
+            case 'C':
             case 'c':
-                adminViewPassengerInfo(date);
+                adminViewPassengerInfo(BusTrip);
                 break;
+            case 'D':
             case 'd':
-                adminSearchPassenger(date);
+                adminSearchPassenger(BusTrip);
                 break;
+            case 'E':
             case 'e':
-                adminEmbarkation(date);
+                adminEmbarkation(BusTrip, exits);
                 break;
+            case 'F':
             case 'f':
+                adminLoadFile(BusTrip, exits);
+                break;
+            case 'G':
+            case 'g':
                 isChoosingAdminCmds = FALSE;
         }
     } 

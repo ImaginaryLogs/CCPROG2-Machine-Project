@@ -4,7 +4,7 @@
 
 void
 printPassenger(struct Passenger *Passenger){
-    printf("\n#>---<|[>] Result|>--------------#\n");
+    printf("\n#>---<|[>] Result >--------------------------------------------#\n");
     printf("Y Trip Number:\t\t %s\n", Passenger->tripNumber);
     printf("| Embarkation Point:\t %s\n", Passenger->embarkationPoint);
     printf("| Passenger Name:\t %s, %s ", Passenger->passengerName.lastName, Passenger->passengerName.firstName);
@@ -15,17 +15,18 @@ printPassenger(struct Passenger *Passenger){
     printf("| ID Number:\t\t %u\n", Passenger->idNumber);
     printf("| Priority Number:\t %u\n", Passenger->priorityNumber);
     printf("A Drop off Point:\t %s\n", Passenger->dropOffPoint);
-    printf("#>-------------------------------#\n\n");
+    printf("#>--------------------------------------------------------------#\n\n");
 }
 
 
 void
 printBus16 (struct Bus16 Trip){
     int i;
-    printf("Trip: \'%s\'\n", Trip.TripID);
-    printf("Time: %02d:%02d\n", Trip.timeOfTrip.hour, Trip.timeOfTrip.minute);
-    printf("Passengers: %d\n", Trip.volume);
-    for(i = 0; i < 16 ;i++){
+    printf("Trip:              \'%s\'\n", Trip.TripID);
+    printf("Time:               %02d:%02d\n", Trip.timeOfTrip.hour, Trip.timeOfTrip.minute);
+    printf("Passengers:         %d\n", Trip.volume);
+    printf("Embarkation Point:  %s\n\n", Trip.embarkationPoint);
+    for(i = 0; i < Trip.volume ;i++){
         printf("Seat: %d", i);
         printPassenger(&Trip.Passengers[i]);
     }
@@ -38,7 +39,7 @@ printPassengerInfo (TripNo inputTripNumber, struct Bus16 *BusTrip, int passenger
 
     if (passengers > 0){   
         printf("Passengers of %s:\n", inputTripNumber);
-        printf("#=>-------------------------- - -\n");
+        printf("#=>--------------------------- - -\n");
         for(i = 0; i < passengers; i++){
             printf("Y\tName: %s\n", GetStringFromNameField(nameBuffer, BusTrip->Passengers[i].passengerName));
             strcpy(nameBuffer, "");
@@ -50,6 +51,15 @@ printPassengerInfo (TripNo inputTripNumber, struct Bus16 *BusTrip, int passenger
         printErrorMessage("Trip not yet created.\n");
     }
 }
+
+void
+embarkationCodeEquivalent(char * embarkationPoint, char *outputCode){
+    if (strcmp(embarkationPoint, "DLSU Manila Campus - South Gate Driveway") == 0){
+        strcpy(outputCode, "MNL-LAG");
+    } else {
+        strcpy(outputCode, "LAG-MNL");
+    }
+};
 
 void
 printSearchResults (struct SearchResultField *lastNameResults, struct Bus16 BusTrip[], char *nameToSearch){
@@ -82,8 +92,8 @@ printSearchResults (struct SearchResultField *lastNameResults, struct Bus16 BusT
 
         isQuitingSearch = userChoice == -1;
         hasChosenBeyondGiven = userChoice > lastNameResults->size;
-        hasChosenAResult = userChoice > 0 && userChoice < lastNameResults->size;
-
+        hasChosenAResult = userChoice > 0 && userChoice <= lastNameResults->size;
+        printf("Result: %d %d", userChoice, hasChosenAResult);
         if (isQuitingSearch) {
             isSearching = FALSE;
             system("cls");
@@ -91,6 +101,7 @@ printSearchResults (struct SearchResultField *lastNameResults, struct Bus16 BusT
             system("cls");
             printErrorMessage("Search number is invalid.");
         } else if (hasChosenAResult) {
+            
             tripResultIndex = lastNameResults->tripNumber[userChoice - 1];
             passResultIndex = lastNameResults->passengerIndex[userChoice - 1];
             ResultingPassenger = BusTrip[tripResultIndex].Passengers[passResultIndex];
@@ -102,6 +113,7 @@ printSearchResults (struct SearchResultField *lastNameResults, struct Bus16 BusT
 
 void 
 printTrips (struct Bus16 Trips[]){
+    String15 stringEmbarkCode = "";
     HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     int nColor = FG_WHITE;
     int i;
@@ -120,21 +132,22 @@ printTrips (struct Bus16 Trips[]){
         }
 
         printf("| |    ");
+
         SetConsoleTextAttribute(hConsoleOutput, nColor);
         printf("%s", Trips[i].TripID);
+
         SetConsoleTextAttribute(hConsoleOutput, FG_WHITE | BG_BLACK);
         printf("    | ");
         SetConsoleTextAttribute(hConsoleOutput, nColor);
-        printf("%02d/%02d", Trips[i].volume, (Trips[i].volume > 13) ? 16 : 13);
-        SetConsoleTextAttribute(hConsoleOutput, FG_WHITE | BG_BLACK);
-        printf("        | ");
-        SetConsoleTextAttribute(hConsoleOutput, nColor);
 
-        if(strcmp(Trips[i].Passengers[0].embarkationPoint, "") != 0){
-            printf("%s via %s \n", Trips[i].Passengers[0].embarkationPoint, Trips[i].route);
-        } else {
-            printf("--- \n");
-        }
+        printf("    %02d/%02d", Trips[i].volume, (Trips[i].volume > 13) ? 16 : 13);
+        SetConsoleTextAttribute(hConsoleOutput, FG_WHITE | BG_BLACK);
+        printf("    | ");
+
+        SetConsoleTextAttribute(hConsoleOutput, nColor);
+        embarkationCodeEquivalent(Trips[i].embarkationPoint, stringEmbarkCode);
+        printf("%s ", stringEmbarkCode);
+        printf("%s\n", Trips[i].route);
         SetConsoleTextAttribute(hConsoleOutput, FG_WHITE | BG_BLACK);
     }
     printGraphics("PassEmbark2");
@@ -289,50 +302,6 @@ containsDropOffPointList (struct dropOffPointList *input, char *dropOff){
 
 // |===| Trip File Functions |=============================|
 
-/**
- * @brief  
- * @note   
- * @param  TripNumber: 
- * @param  *EmbarkationPoint: 
- * @param  *PassengerName: 
- * @param  idNumber: 
- * @param  priorityNumber: 
- * @param  date: 
- * @param  time: 
- * @param  *dropOffPoint: 
- * @return
- */
-ErrorInt 
-tripFile_PassengerAppender (struct DateDMY tripDate, struct Passenger *newPassenger){
-    FILE *pFileBusTrip;
-    String15 fileName = "";
-    String15 strTripOfDate = "";
-    int isFileDoesNotExist = FALSE;
-
-    StringfromDateDMY(fileName, &tripDate, TRUE);
-
-    printf("Date: %s\n", fileName);
-    pFileBusTrip = fopen(fileName, "a");
-    
-    isFileDoesNotExist = pFileBusTrip == NULL;
-    if (isFileDoesNotExist) {   
-        fclose(pFileBusTrip);
-        return EROR_FILE_NOT_FOUND;
-    }
-
-    // Actual Passenger Append
-    fprintf(pFileBusTrip, "%s\n", newPassenger->tripNumber);
-    fprintf(pFileBusTrip, "%s\n", newPassenger->embarkationPoint);
-    fprintf(pFileBusTrip, "%s\n", newPassenger->passengerName);
-    fprintf(pFileBusTrip, "%u\n", newPassenger->idNumber);
-    fprintf(pFileBusTrip, "%u\n", newPassenger->priorityNumber);
-    fprintf(pFileBusTrip, "%s\n", newPassenger->dropOffPoint);
-    
-    fclose(pFileBusTrip);
-    
-    return PROG_SUCCESS;
-}
-
 ErrorInt
 tripFile_GetCurrentPassenger (FILE * pFileBusTrip, struct Passenger *keyPassenger){
     String255 strName = "";
@@ -340,10 +309,12 @@ tripFile_GetCurrentPassenger (FILE * pFileBusTrip, struct Passenger *keyPassenge
     String15 strTimeOfTrip = "";
     String15 strPriorityNumber = "";
     String15 strIdNumber = "";
+
     if (feof(pFileBusTrip)) {
         fclose(pFileBusTrip);
         return EROR_KEY_NOT_FOUND;
     };
+
     fgets(keyPassenger->tripNumber, 255, pFileBusTrip);
     fgets(keyPassenger->embarkationPoint, 255, pFileBusTrip);
     fgets(strName, 255, pFileBusTrip);
@@ -520,7 +491,7 @@ tripFileSearch_PassengerFull (struct DateDMY *tripDate, struct Passenger *keyPas
  * @return Number of passengers in the trip.
  */
 int
-tripFile_GetBusTrip (struct DateDMY *tripDate, TripNo inputTrip, struct Bus16 *BusTrip, struct dropOffPointList *exits){
+tripFile_GetBusTrip2 (struct DateDMY *tripDate, TripNo inputTrip, struct Bus16 *BusTrip, struct dropOffPointList *exits){
     struct Passenger holder;
     FILE *pFileBusTrip;
     String255 temporaryBuffer = "";
@@ -580,6 +551,167 @@ tripFile_GetBusTrip (struct DateDMY *tripDate, TripNo inputTrip, struct Bus16 *B
 }
 
 
+int
+findIndexOfTripNo(char *inputTripNo){
+    TripNo Codes[TOTAL_TRIPS] = {
+        "AE101", "AE102", "AE103", "AE104", "AE105",
+        "AE106", "AE107", "AE108", "AE109", 
+        "AE150", "AE151", "AE152", "AE153", "AE154", 
+        "AE155", "AE156", "AE157", "AE158", "AE159", "AE160", 
+        "SP101", "SP102"
+    };
+    int i;
+
+    for (i = 0; i < TOTAL_TRIPS; i++) {
+        if (strcmp(Codes[i], inputTripNo) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+ErrorInt
+findTimeOfTripNo(char *inputTripNo, char *strOutputTime){
+    TripNo Codes[TOTAL_TRIPS] = {
+        "AE101", "AE102", "AE103", "AE104", "AE105",
+        "AE106", "AE107", "AE108", "AE109", 
+        "AE150", "AE151", "AE152", "AE153", "AE154", 
+        "AE155", "AE156", "AE157", "AE158", "AE159", "AE160",
+        "SP101", "SP102"
+    };
+
+    String7 Time[TOTAL_TRIPS] = {
+         "6:00",  "7:30",  "9:30", "11:00", "13:00",
+        "14:30", "15:30", "17:00", "18:15",
+         "5:30",  "5:45",  "7:00",  "7:30",  "9:00",
+        "11:00", "13:00", "14:30", "15:30", "17:00", "18:15",
+        "00:00", "00:00"
+    };
+
+    int i;
+
+    for (i = 0; i < TOTAL_TRIPS; i++) {
+        if (strcmp(Codes[i], inputTripNo) == 0) {
+            strcpy(strOutputTime, Time[i]);
+            return PROG_SUCCESS;
+        }
+    }
+
+    return EROR_KEY_NOT_FOUND;
+}
+
+/***/
+int
+tripFile_GetBusTrip(struct DateDMY *tripDate, struct Bus16 BusTrip[], struct dropOffPointList *exits){
+    struct Passenger    tempPassenger;
+    struct TimeHM       tempTime;
+    FILE *pFileBusTrip;
+    String255 temporaryBuffer[3] = {""};
+    String15 fileName   = "";
+    String15 timeOfTrip = "";
+
+    int isFileDoesNotExist      = FALSE;
+    int hasMatchedTrip          = FALSE;
+    int hasNotFoundEOF          = TRUE;
+    int ReadingState            = FALSE;
+    int hasBusPreviousBusTrip   = FALSE;
+
+    int nLineIgnored    = 0;
+    int nBusPassenger   = 0;
+    int nFoundDropOff   = 0;
+    int tripIndex       = 0;
+    int i;
+
+    // File Handling
+    StringfromDateDMY(fileName, tripDate, TRUE);
+    printf("%s", fileName);
+    pFileBusTrip = fopen(fileName, "r");
+    isFileDoesNotExist = pFileBusTrip == NULL;
+
+    if (isFileDoesNotExist) {   
+        fclose(pFileBusTrip);
+        printErrorMessage("tripFile_GetBusTrip2 FAIL.\n ERROR: FILE DOES NOT EXIST");
+        return EROR_FILE_NOT_FOUND;
+    }
+
+    for (i = 0; i < 2; i++) {
+            fgets(temporaryBuffer[i], 255, pFileBusTrip);
+            removeNewline(temporaryBuffer[i]);
+            printf("%s\n", temporaryBuffer[i]);
+    }
+
+    while (!feof(pFileBusTrip)) {
+        // Check if its a new Trip
+        if (isStringTripNo(temporaryBuffer[0])) {
+            tripIndex = findIndexOfTripNo(temporaryBuffer[0]);
+            findTimeOfTripNo(temporaryBuffer[0], timeOfTrip);
+            strcpy(BusTrip[tripIndex].TripID, temporaryBuffer[0]);
+            strcpy(BusTrip[tripIndex].embarkationPoint, temporaryBuffer[1]);
+            BusTrip[tripIndex].timeOfTrip = TimeHMfromString(timeOfTrip);
+            BusTrip[tripIndex].volume = 0;       
+        // Else Assume its a passenger. 
+        } else {
+            strcpy(tempPassenger.embarkationPoint, BusTrip[tripIndex].embarkationPoint);
+            strcpy(tempPassenger.tripNumber, BusTrip[tripIndex].TripID);
+            tempPassenger.passengerName = GetNameFromString(temporaryBuffer[0]);
+            tempPassenger.idNumber = atoi(temporaryBuffer[1]);
+
+            for (i = 0; i < 3; i++) {
+                fgets(temporaryBuffer[i], 255, pFileBusTrip);
+                removeNewline(temporaryBuffer[i]);
+            }
+
+            tempPassenger.priorityNumber = atoi(temporaryBuffer[0]);
+            strcpy(tempPassenger.dropOffPoint, temporaryBuffer[1]);
+
+            BusTrip[tripIndex].Passengers[BusTrip[tripIndex].volume] = tempPassenger;
+            BusTrip[tripIndex].volume++;
+        }
+        // Move forward by two
+        for (i = 0; i < 2; i++){
+            fgets(temporaryBuffer[i], 255, pFileBusTrip);
+            removeNewline(temporaryBuffer[i]);
+        }
+        
+    }
+
+    fclose(pFileBusTrip);
+    return 0;
+}
+
+void
+tripFile_WriteBusTrip(struct DateDMY *tripDate, struct Bus16 BusTrip[]){
+    FILE *busTripFile;
+    String15 fileName = "";
+    String127 passengerName = "";
+    int i, j;
+
+    StringfromDateDMY(fileName, tripDate, TRUE);
+
+    busTripFile = fopen(fileName, "w");
+
+    if (busTripFile == NULL){
+        printErrorMessage("File writing error! Check if filename is available to use.");
+        fclose(busTripFile);
+    }
+
+    for(i = 0; i < TOTAL_TRIPS; i++){
+        if (BusTrip[i].volume > 0) {
+            fprintf(busTripFile, "%s\n", BusTrip[i].TripID);
+            fprintf(busTripFile, "%s\n", BusTrip[i].embarkationPoint);
+            for (j = 0; j < BusTrip[i].volume; j++){
+                GetStringFromNameField(passengerName, BusTrip[i].Passengers[j].passengerName);
+                fprintf(busTripFile, "%s\n", passengerName);
+                fprintf(busTripFile, "%d\n", BusTrip[i].Passengers[j].idNumber);
+                fprintf(busTripFile, "%d\n", BusTrip[i].Passengers[j].priorityNumber);
+                fprintf(busTripFile, "%s\n\n", BusTrip[i].Passengers[j].dropOffPoint);
+            }
+        }
+    }
+
+    fclose(busTripFile);
+}
+
 void
 tripCopy(struct Bus16 *Destination, struct Bus16 *Source){
     int i;
@@ -604,7 +736,7 @@ tripCopy(struct Bus16 *Destination, struct Bus16 *Source){
  * @return How many passengers are there in the inputted Trip.
  */
 int
-tripStruct_GetBusTrip (TripNo inputTrip, struct Bus16 TripInfo[], struct Bus16 *TripKey, int *keyLoc){
+tripStruct_SearchBusTrip (TripNo inputTrip, struct Bus16 TripInfo[], struct Bus16 *TripKey, int *keyLoc){
     int i;
     int isTripFound = FALSE;
     int key = 0;
@@ -635,7 +767,7 @@ tripStruct_ReturnLastname (struct Bus16 BusTrip[], char *LastName, struct Search
     int i;
     int j;
     // File Handling
-    for (i = 0; i < 22 && !hasFullSearches; i++){
+    for (i = 0; i < TOTAL_TRIPS && !hasFullSearches; i++){
         for(j = 0; j < 16 && !hasFullSearches; j++){
             nameBuffer = BusTrip[i].Passengers[j].passengerName;
             GetStringFromNameField(strName, nameBuffer);
@@ -686,16 +818,15 @@ initializeDropOffPointList (struct dropOffPointList *input){
             "3rd drop-off point - Gate 2: North Gate (HSSH)",
             "4th drop-off point - Gate 1: South Gate (LS Building Entrance)"
         }, {
-            "2nd drop-off point - College of St. Benilde (CSB) along Taft Avenue",
-            "3rd drop-off point - Gate 4: Gokongwei Gate",
-            "4th drop-off point - Gate 2: North Gate (HSSH)",
-            "5th drop-off point - Gate 1: South Gate (LS Building Entrance)"
+            "1st drop-off point - College of St. Benilde (CSB) along Taft Avenue",
+            "2nd drop-off point - Gate 4: Gokongwei Gate",
+            "3rd drop-off point - Gate 2: North Gate (HSSH)",
+            "4th drop-off point - Gate 1: South Gate (LS Building Entrance)"
         }
     };
     int dropOffSizes[4] = { 3, 2, 4, 4 };
     int i;
     int j;
-
     
     for(i = 0; i < 4; i++){
         for (j = 0; j < dropOffSizes[i]; j++){
@@ -729,24 +860,20 @@ passwordMenu (int *isChoosingAdminCmds, int *isInputingPass, char *realPass){
 
 void
 initializeBusTrip (struct Bus16 Triplist[], int size, struct DateDMY *date, int isStartingFromFile, struct dropOffPointList *exits){
-    int returnedPassengers = 0;
-    TripNo Codes[22] = {
+    TripNo Codes[TOTAL_TRIPS] = {
         "AE101", "AE102", "AE103", "AE104", "AE105",
         "AE106", "AE107", "AE108", "AE109", 
         "AE150", "AE151", "AE152", "AE153", "AE154", 
-        "AE155", "AE156", "AE157", "AE158", "AE159", "AE160"
+        "AE155", "AE156", "AE157", "AE158", "AE159", "AE160",
+        "SP101", "SP150",
     };
     
-    String7 Time[22] = {
-         "6:00",  "7:30",  "9:30", "11:00", "13:00",
-        "14:30", "15:30", "17:00", "18:15",
-         "5:30",  "5:45",  "7:00",  "7:30",  "9:00",
-        "11:00", "13:00", "14:30", "15:30", "17:00", "18:15"
-    };
-    
+    String7 strTime = "";
+    int returnedPassengers = 0;
     int i;
     int j;
-    for(i = 0; i < 22; i++){
+
+    for(i = 0; i < TOTAL_TRIPS; i++){
         strcpy(Triplist[i].TripID, "--000");
         Triplist[i].volume = 0;
         Triplist[i].timeOfTrip.hour = 0;
@@ -763,19 +890,34 @@ initializeBusTrip (struct Bus16 Triplist[], int size, struct DateDMY *date, int 
         }
     }
 
-    for(i = 0; i < 20; i++){
+    
+    
+    for(i = 0; i < TOTAL_TRIPS; i++){
         strcpy(Triplist[i].TripID, Codes[i]);
-        Triplist[i].timeOfTrip = TimeHMfromString(Time[i]);
-        if (isStartingFromFile)
-            returnedPassengers = tripFile_GetBusTrip(date, Codes[i], &Triplist[i], exits);
+        findTimeOfTripNo(Triplist[i].TripID, strTime);
+        Triplist[i].timeOfTrip = TimeHMfromString(strTime);
+        
+        if (i < 9 || i == 20)
+            strcpy(Triplist[i].embarkationPoint, "DLSU Manila Campus - South Gate Driveway");
+        else if (i < 20 || i == 21)
+            strcpy(Triplist[i].embarkationPoint, "DLSU Laguna Campus - Milagros Del Rosario (MRR) Building - East Canopy");
+    
+        if (i == 20 || i < 9 && i % 2 == 0)
+            strcpy(Triplist[i].route, "Mamplasan Exit");
+        else if (i < 9 && i % 2 == 1)
+            strcpy(Triplist[i].route, "ETON Exit");
+        else if (i == 21 || i < 20 && i % 2 == 0)
+            strcpy(Triplist[i].route, "Estrada");
+        else if (i < 20 && i % 2 == 1)
+            strcpy(Triplist[i].route, "Buendia/LRT");
 
-        if (isStartingFromFile && returnedPassengers > 0){
-            Triplist[i].volume = returnedPassengers;
-        } else {
-            strcpy(Triplist[i].TripID, "--000");
-            Triplist[i].volume = 0;
-        }
+        Triplist[i].volume = 0;
     }
+
+    if (isStartingFromFile) {
+        returnedPassengers = tripFile_GetBusTrip(date, Triplist, exits);
+        printBus16(*Triplist);
+    } 
 }
 
 void
@@ -790,10 +932,15 @@ initializeSearchResult (struct SearchResultField *DropOffResults){
 }
 
 struct SearchResultField
-countWordFrequency (struct Bus16 BusTrip, int results){
+countWordFrequency (struct Bus16 BusTrip, int returnedPassengers){
     struct SearchResultField DropOffResults;
+    String255 strTemp;
     int foundSameDropOff = FALSE;;
-    int resultIndex;
+    int nPass;
+    int nResult;
+    int max;
+    int nTemp;
+    int i;
     int j;
 
     initializeSearchResult(&DropOffResults);
@@ -802,23 +949,202 @@ countWordFrequency (struct Bus16 BusTrip, int results){
     DropOffResults.passengerIndex[0] = 1;
     DropOffResults.size++;
 
-    for (resultIndex = 1; resultIndex < results; resultIndex++){
+    for (nPass = 1; nPass < returnedPassengers; nPass++){
         foundSameDropOff = FALSE;  
 
-        for (j = 0; j < DropOffResults.size && !foundSameDropOff; j++){
-            if (strcmp(DropOffResults.result[j], BusTrip.Passengers[resultIndex].dropOffPoint) == 0){
+        for (nResult = 0; nResult < DropOffResults.size && !foundSameDropOff; nResult++){
+            // is ALREADY ENCOUNTERED?
+            if (strcmp(DropOffResults.result[nResult], BusTrip.Passengers[nPass].dropOffPoint) == 0){
                 foundSameDropOff = TRUE;
-                DropOffResults.passengerIndex[j] += 1;
+                DropOffResults.passengerIndex[nResult] += 1;
             }
         }
 
         if (!foundSameDropOff) {
-            strcpy(DropOffResults.result[DropOffResults.size], BusTrip.Passengers[resultIndex].dropOffPoint);
+            strcpy(DropOffResults.result[DropOffResults.size], BusTrip.Passengers[nPass].dropOffPoint);
             DropOffResults.passengerIndex[DropOffResults.size] = 1;
             DropOffResults.size++;
         }
     }
+    // SORTING ALGORITHM for Search Results
+    for(i = 0; i < DropOffResults.size - 1; i++){
+        max = i;
+        for(j = 1; j < DropOffResults.size; j++){
+            // Since ASCII value of '2' > '1', then STRING of max > STRING of j, then strcmp > 0. 
+            // All drop-offs start with a number, so arrange increasingly to align.
+            if (strcmp(DropOffResults.result[max], DropOffResults.result[j]) > 0)
+                max = j;
+        }
+        // SWAP CODE
+        if (max != j){
+            strcpy(strTemp, DropOffResults.result[i]);
+            strcpy(DropOffResults.result[i], DropOffResults.result[max]);
+            strcpy(DropOffResults.result[max], strTemp);
+
+            nTemp = DropOffResults.passengerIndex[i];
+            DropOffResults.passengerIndex[i] = DropOffResults.passengerIndex[max];
+            DropOffResults.passengerIndex[max] = nTemp;
+        }
+    }
     return DropOffResults;
+}
+
+void
+repeatGetPassenger(struct Passenger *pInput, struct Bus16 TripDatabase[], struct dropOffPointList *exits){
+    String63 validationErrorMessage = "Please enter either Y or N only.";
+    struct Passenger holder;
+    String15 Route = "";
+    int embarkationNum;
+    int routeNum;
+    int isValidRanges;
+    int dropOffNum;
+    int isValidatingAll = TRUE;
+    int isValidDetail[5] = {FALSE};
+    char userValidation;
+    int isConfirmed = FALSE;
+    int temp;
+
+    String255 strDropOffs[13] = {
+        "1st drop-off point - Mamplasan Toll Exit", 
+        "2nd drop-off point - Phase 5, San Jose Village", 
+        "3rd drop-off point - Milagros Del Rosario (MRR) Building - East Canopy",
+        "1st drop-off point - Laguna Blvd. Guard House (across Paseo PHOENIX Gasoline Station)", 
+        "2nd drop-off point - Milagros Del Rosario (MRR) Building - East Canopy",
+        "1st drop-off point - Petron Gasoline Station along Gil Puyat Avenue",
+        "2nd drop-off point - Gate 4: Gokongwei Gate",
+        "3rd drop-off point - Gate 2: North Gate (HSSH)",
+        "4th drop-off point - Gate 1: South Gate (LS Building Entrance)",
+        "1st drop-off point - College of St. Benilde (CSB) along Taft Avenue",
+        "2nd drop-off point - Gate 4: Gokongwei Gate",
+        "3rd drop-off point - Gate 2: North Gate (HSSH)",
+        "4th drop-off point - Gate 1: South Gate (LS Building Entrance)"
+    };
+
+    while(isValidatingAll){
+        
+        while (!isValidDetail[0]){
+            printTrips(TripDatabase);
+            repeatGetTripNo(holder.tripNumber, "PassEmbark3", "\t> Please Input Trip No: ", "Enter a valid one.");
+            system("cls");
+            
+            isConfirmed = FALSE;
+            while(!isConfirmed){
+                printf("Is %s correct?\n", holder.tripNumber);
+                validateUserInput(&isConfirmed, &isValidDetail[0], validationErrorMessage);
+            }
+        }
+
+        while (!isValidDetail[1]){
+            isConfirmed = FALSE;
+            repeatGetString(holder.passengerName.firstName, 63, "PassEmbark4-1", "\t> First Name ", "Please enter a valid last name within 64 characters.");
+            system("cls");
+            repeatGetString(holder.passengerName.lastName, 63, "PassEmbark4-2", "\t> Last Name ", "Please enter a valid first name within 64 characters.");
+            system("cls");
+            repeatGetChar(&holder.passengerName.midI, "PassEmbark4-3", "\t> Middle Initial ", "Please enter one valid character.");
+            system("cls");
+
+            
+            while (!isConfirmed) {
+                printGraphics("PassEmbark4-4");
+                printf("Is %s, %s %c. correct?\n", holder.passengerName.lastName, holder.passengerName.firstName, holder.passengerName.midI);
+                validateUserInput(&isConfirmed, &isValidDetail[1], validationErrorMessage);
+            }
+        }
+
+        while (!isValidDetail[2]){
+            isConfirmed = FALSE;
+            repeatGetInteger(&holder.idNumber, "PassEmbark5", "\t> Pass Ranking: ", "Please enter a valid integer.");
+            system("cls");
+            
+            if (holder.idNumber <= 0){
+                printErrorMessage("Not a valid ID Number.");
+            }
+            
+            while (!isConfirmed && holder.idNumber > 0) {
+                printGraphics("PassEmbark5");
+                printf("Is %d correct?\n", holder.idNumber);
+                validateUserInput(&isConfirmed, &isValidDetail[2], validationErrorMessage);
+            }
+        }
+
+        while (!isValidDetail[3]){
+            isConfirmed = FALSE;
+            repeatGetInteger(&holder.priorityNumber, "PassEmbark6", "\t> Pass Ranking: ", "Please enter a valid integer.");
+            system("cls");
+            if (holder.priorityNumber <= 0 && holder.priorityNumber > 6){
+                printErrorMessage("Not a valid priority number.");
+            }
+ 
+            while (!isConfirmed && holder.priorityNumber > 0 && holder.priorityNumber <= 6) {
+                printGraphics("PassEmbark6");
+                printf("Is %d correct?\n", holder.priorityNumber);
+                validateUserInput(&isConfirmed, &isValidDetail[3], validationErrorMessage);
+            }
+        }
+
+        while (!isValidDetail[4]){
+            isConfirmed = FALSE;
+            isValidRanges = TRUE;
+            system("cls");
+            repeatGetInteger(&embarkationNum, "PassEmbark7", "\t Embarkation Point: ", "Please choose the number corresponding \n to where you are now.");
+
+            if (embarkationNum < 0 || embarkationNum > 1) {
+                printErrorMessage("Not a valid Embarkation selection.");
+                isValidRanges = FALSE;
+            } else {
+                if (embarkationNum == 0) 
+                    strcpy(holder.embarkationPoint, "DLSU Manila Campus - South Gate Driveway");
+                else
+                    strcpy(holder.embarkationPoint, "DLSU Laguna Campus - Milagros Del Rosario (MRR) Building - East Canopy");
+            }
+
+            if (isValidRanges) {
+                system("cls");
+                repeatGetInteger(&routeNum, "PassEmbark8", "\t Embarkation Point: ", "Please choose the number corresponding to the route you want.");
+
+                if (routeNum < 0 || routeNum > 3) {
+                    printErrorMessage("Not a valid Embarkation selection.");
+                    isValidRanges = FALSE;
+                } else {
+                    strcpy(holder.route, exits[routeNum].route);
+                }
+            }
+
+            if (isValidRanges) {
+                system("cls");
+                repeatGetInteger(&dropOffNum, "PassEmbark9", "\t Route: ", "Please choose which drop off you want.");
+
+                if (dropOffNum < 0 || dropOffNum >= 13) {
+                    printErrorMessage("Not a valid Drop Off selection.");
+                    isValidRanges = FALSE;
+                } else {
+                    strcpy(holder.dropOffPoint, strDropOffs[dropOffNum]);
+                }
+            }
+
+            while (!isConfirmed && isValidRanges) {
+                printf("\nCheck if Correct:\n");
+                printf("Embarkation Point: \t%s\nDrop point: \t\t%s\nRoute: \t\t\t%s\n\n", holder.embarkationPoint, holder.dropOffPoint, holder.route);
+                validateUserInput(&isConfirmed, &isValidDetail[4], validationErrorMessage);
+            }
+        }
+        
+        isConfirmed = FALSE;
+        while (!isConfirmed){
+            printPassenger(&holder);
+            validateUserInput(&isConfirmed, &isValidatingAll, validationErrorMessage);
+
+            if (isConfirmed) {
+                isValidDetail[0] = FALSE;
+                isValidDetail[1] = FALSE;
+                isValidDetail[2] = FALSE;
+                isValidDetail[3] = FALSE;
+                isValidDetail[4] = FALSE;
+            }
+        }   
+    }
+    *pInput = holder;
+    return;
 }
 
 /********************************************************************************************************* 

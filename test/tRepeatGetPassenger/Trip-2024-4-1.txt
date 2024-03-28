@@ -1,0 +1,73 @@
+AE101
+DLSU Manila Campus
+Monkey, Luffy D.
+12300001
+6
+1st drop-off point - Mamplasan Toll Exit
+AE150
+DLSU Laguna Campus - Milagros Del Rosario (MRR) Building - East Canopy
+Marshall, Teach D.
+12300020
+3
+1st drop-off point - Petron Gasoline Station along Gil Puyat Avenue
+AE105
+DLSU Manila Campus
+Sakazuki, Akainu
+12300031
+1
+1st drop-off point - Mamplasan Toll Exit
+AE101
+DLSU Manila Campus
+Roronoa, Zoro 
+12300002
+5
+2nd drop-off point - Phase 5, San Jose Village
+AE150
+DLSU Laguna Campus - Milagros Del Rosario (MRR) Building - East Canopy
+Jesus, Burgess
+12300021
+2
+2nd drop-off point - Gate 4: Gokongwei Gate
+AE105
+DLSU Manila Campus
+Borsalino, Kizaru
+12300032
+1
+2nd drop-off point - Phase 5, San Jose Village
+AE101
+DLSU Manila Campus
+Cocoyasi, Nami 
+12300003
+2
+3rd drop-off point - Milagros Del Rosario (MRR) Building - East Canopy
+AE150
+DLSU Laguna Campus - Milagros Del Rosario (MRR) Building - East Canopy
+Shiryu
+12300022
+1
+3rd drop-off point - Gate 2: North Gate (HSSH)
+AE105
+DLSU Manila Campus
+Issho, Fujitora
+12300033
+1
+3rd drop-off point - Milagros Del Rosario (MRR) Building - East Canopy
+AE102
+DLSU Manila Campus
+Sogeking, Usopp
+12300004
+6
+1st drop-off point - Laguna Blvd. Guard House (across Paseo PHOENIX Gasoline Station)
+AE150
+DLSU Laguna Campus - Milagros Del Rosario (MRR) Building - East Canopy
+Van, Augar
+12300023
+3
+4th drop-off point - Gate 1: South Gate (LS Building Entrance)
+AE106
+DLSU Manila Campus
+Aramaki, Ryokugyu
+12300034
+1
+1st drop-off point - Laguna Blvd. Guard House (across Paseo PHOENIX Gasoline Station)
+

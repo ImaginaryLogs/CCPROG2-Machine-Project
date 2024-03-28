@@ -50,24 +50,25 @@ struct DateDMY {
 };
 
 struct NameField {
-    String63 lastName;
-    String63 firstName;
+    String63    lastName;
+    String63    firstName;
     char midI;
 };
 
 struct dropOffPointList {
-    String127 dropOffs[4];
-    String31 route;
+    String127   dropOffs[4];
+    String31    route;
     int size;
 };
 
 struct Passenger {
-    String255 embarkationPoint;
-    String255 dropOffPoint;
     struct NameField passengerName;
-    TripNo tripNumber;
-    unsigned int idNumber;
-    unsigned int priorityNumber;
+    String255   dropOffPoint;
+    String127   embarkationPoint;
+    String31    route;
+    TripNo      tripNumber;
+    int idNumber;
+    int priorityNumber;
 };
 
 struct SearchResultField{
@@ -80,6 +81,7 @@ struct SearchResultField{
 struct Bus16 {
     struct Passenger Passengers[BUS_SIZE];
     struct TimeHM timeOfTrip;
+    String127 embarkationPoint;
     String31 route;
     TripNo TripID;
     int volume;
@@ -161,14 +163,16 @@ printPopUpMessage(char *headerString, int headerColor, char *bodyMessage){
 ErrorInt 
 printGraphics(char *graphicsID){
     String255 graphicsData = "";
-    String63 strErrorEndOfFile = "PG Error: EOF. \n\tGraphics Not found.\n";
-    String63 strErrorMisalign = "PG Error: Misalignment. \n\tNext Graphics Metadata not found.\n";
-    String63 strErrorFileNotFound = "PG Error: File not found. \n\t\"ASCII_Art.txt\" not found.\n";
-    String31 strMetadataFormat = "ID:%s %s\n";
-    String15 stringGraphicHeight = "";
-    String15 scannedGraphicId = "";
-    String15 prevGraphicHeight = "";
-    String15 prevGraphicId = "";
+
+    String63 strErrorEndOfFile      = "PG Error: EOF. \n\tGraphics Not found.\n";
+    String63 strErrorMisalign       = "PG Error: Misalignment. \n\tNext Graphics Metadata not found.\n";
+    String63 strErrorFileNotFound   = "PG Error: File not found. \n\t\"ASCII_Art.txt\" not found.\n";
+
+    String31 strMetadataFormat      = "ID:%s %s\n";
+    String15 stringGraphicHeight    = "";
+    String15 scannedGraphicId       = "";
+    String15 prevGraphicHeight      = "";
+    String15 prevGraphicId          = "";
 
     FILE *fileGraphics;
 
@@ -245,35 +249,6 @@ isInputSuccesful(int inputs, char closingChar, char *errorMessage){
         clearInput();
     }
     return isInputSuccessful;
-}
-
-void
-repeatGetTripNo(char *pInput, char choiceMenuGraphicsCode[], char *promtMessage, char *errorMessage){
-    int isIncorrectInput = 1;
-    int TripNumber;
-    int typeReturned = 0;
-    char closingChar;
-    String7 strTripNumber = "";
-    do {
-        printGraphics(choiceMenuGraphicsCode);
-        printf("%s", promtMessage);
-        typeReturned = scanf("%d%c", &TripNumber, &closingChar);
-        if ((TripNumber < 99 && TripNumber > 0) || TripNumber < 0|| TripNumber > 1000 || typeReturned != 2 || closingChar != '\n'){
-            system("cls");
-            if (closingChar != '\n')
-                clearInput();
-            printErrorMessage(errorMessage);
-        } else {
-            isIncorrectInput = 0;
-            if (TripNumber == 0){
-                strcpy(pInput, "quit");
-            } else {
-                strcpy(pInput, "AE");
-                itoa(TripNumber, strTripNumber, 10);
-                strcat(pInput, strTripNumber);
-            }
-        }
-    } while(isIncorrectInput);
 }
 
 /**
@@ -376,15 +351,42 @@ checkValidDay(int Year, int Month, int Day){
     isMonthAtDay31 = ((Month > 0) && (Month < 8) && (Month % 2 == 1)) || 
                      ((Month > 7) && (Month <= 12) && (Month % 2 == 0));
     return  Day > 0 &&
-            (!(Month == 2 && isLeapYear) || Day < 30) &&
+            (!(Month == 2 && isLeapYear) || Day <= 29) &&
             (isMonthAtDay31 ? Day <= 31 : Day <= 30);
 }
 
 void
 printDate(struct DateDMY *date){
     String7 strMonths[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-    printf("%d, %s %d", date->year, strMonths[date->month - 1], date->day);
+    printf("%d, %s %d", date->day, strMonths[date->month - 1], date->year);
 };
+
+/**
+ * @brief validates userInput
+ * @note   
+ * @param *isChoiceCertain: pointer to the condition of a inner while loop asking if input is final.
+ * @param *isChoiceValidByUser: pointer to the condition of the outer while loop questioning what is the input.
+ * @param *validationErrorMessage: error if the choice is not in the given
+ * @retval 
+ */
+int
+validateUserInput(int *isChoiceCertain, int *isChoiceValidByUser, char * validationErrorMessage){
+    char userValidation;
+    repeatGetChar(&userValidation, "None", "\t> [Y/N]: ", "Enter a valid char.");
+    switch(userValidation){
+        case 'Y':
+        case 'y':
+            *isChoiceValidByUser = !*isChoiceValidByUser;
+        case 'N':
+        case 'n':
+            *isChoiceCertain = !*isChoiceCertain;
+            system("cls");
+            break;
+        default:
+            printErrorMessage(validationErrorMessage);
+    }
+    return *isChoiceValidByUser;
+}
 
 /**
  * @brief  
@@ -397,12 +399,11 @@ repeatGetDateDMY(struct DateDMY *pInput){
     String63 errorMessage = "Please input the correct format.";
     String63 validationErrorMessage = "Please enter either Y or N only.";
 
-    int isIncorrectInput = TRUE;
+    int isDeterminingTheInput = TRUE;
     int successfulInputs = 0;
     int returnedInputs = 0;
     int isValidDay = FALSE;
     int isValidMonth = FALSE;
-    int isValidYear = FALSE;
     int isValidChoice;
 
     char userValidation; 
@@ -453,30 +454,19 @@ repeatGetDateDMY(struct DateDMY *pInput){
             printf("Should the date entered be: ");
             printDate(pInput);
             printf("?\n");
-            repeatGetChar(&userValidation, "None", "\t> [Y/N]:", "Enter a valid char.");
-            switch(userValidation){
-                case 'Y':
-                case 'y':
-                    isIncorrectInput = FALSE;
-                case 'N':
-                case 'n':
-                    isValidChoice = FALSE;
-                    system("cls");
-                    break;
-                default:
-                    printErrorMessage(validationErrorMessage);
-            }
+            validateUserInput(&isValidChoice, &isDeterminingTheInput, validationErrorMessage);
         }
-    } while (isIncorrectInput);
+    } while (isDeterminingTheInput);
 }
 
 void
 StringfromDateDMY(char *dateString, struct DateDMY *date, int isFilename){
     String15 fileName = "Trip-";
-    String15 strYear = "";
-    String15 strMonth = "";
-    String15 strDay = "";
     String15 fileExtension = ".txt";
+    String15 strYear    = "";
+    String15 strMonth   = "";
+    String15 strDay     = "";
+    
     // Uses itoa, converts int into a string based on the given base REF: [01]. 
     itoa(date->year, strYear, 10);
     itoa(date->month, strMonth, 10);
@@ -485,11 +475,11 @@ StringfromDateDMY(char *dateString, struct DateDMY *date, int isFilename){
     if (isFilename)
         strcat(dateString, fileName);
 
-    strcat(dateString, strYear);
+    strcat(dateString, strDay);
     dateString[strlen(dateString)] = '-';
     strcat(dateString, strMonth);
     dateString[strlen(dateString)] = '-';
-    strcat(dateString, strDay);
+    strcat(dateString, strYear);
 
     if (isFilename)
         strcat(dateString, fileExtension);
@@ -513,31 +503,39 @@ DateDMYfromString(struct DateDMY *date, char *dateString){
 }
 
 struct TimeHM 
-TimeHMfromString( char *timeString){
+TimeHMfromString(char *timeString){
     struct TimeHM time;
-    int i;
-    int foundYearMonthSeparator;
-    int separator = timeString[1] == ':' ? 1 : 2;
     String7 hour = "";
+    int separator;
+
+    separator = timeString[1] == ':' ? 1 : 2;
+
     strcpy(hour, timeString);
     hour[separator] = '\0';
+
     time.hour = atoi(hour);
     time.minute = atoi(hour + separator + 1);
+
     return time;
 }
 
 int
 isSubString(char *subStr, char *str){
-    int i, j, nSameChars;
+    int nStr;
+    int nSub;
+    int nSameChars;
     int isFound = 0;
     int subStrLength, strLength;
+
     subStrLength = strlen(subStr);
     strLength = strlen(str);
-    for(i = 0; i < strLength - subStrLength + 1 && !isFound; i++){
+    for(nStr = 0; nStr < strLength - subStrLength + 1 && !isFound; nStr++){
         nSameChars = 0;
-        for(j = 0; j < subStrLength; j++){
-            nSameChars += str[i + j] == subStr[j];
+
+        for(nSub = 0; nSub < subStrLength; nSub++){
+            nSameChars += str[nStr + nSub] == subStr[nSub];
         }
+
         if (nSameChars == subStrLength)
             isFound = 1;
     }
@@ -600,10 +598,10 @@ GetStringFromNameField(char *strName, struct NameField name){
 
 void
 copySubnameFromName(char *strSubname, char *strFullname, int subnameStartingIndex, int subnameLastIndex){
-    int nCharPosOfSubname = 0;
+    int charIndex = 0;
 
-    for(nCharPosOfSubname = subnameStartingIndex; nCharPosOfSubname < subnameLastIndex; nCharPosOfSubname++)
-        strSubname[nCharPosOfSubname - subnameStartingIndex] = strFullname[nCharPosOfSubname];
+    for(charIndex = subnameStartingIndex; charIndex < subnameLastIndex; charIndex++)
+        strSubname[charIndex - subnameStartingIndex] = strFullname[charIndex];
 
     strSubname[subnameLastIndex - subnameStartingIndex] = '\0';
 }
@@ -617,32 +615,114 @@ copySubnameFromName(char *strSubname, char *strFullname, int subnameStartingInde
 struct NameField
 GetNameFromString(char *strName){
     struct NameField output;
-    int hasSeenFirstName;
-    int hasSeenMiddileInitial;
-    int hasNoMiddleInitial;
-    int nCharPosOfFullname;
-    int firstNameCeiling = 0;
-    int firstNameFloor = 0;
-    int isDone = FALSE; 
+    int hasSeenFirstName        = FALSE;
+    int hasSeenMiddileInitial   = FALSE;
+    int hasNoMiddleInitial      = FALSE;
+    int charIndex       = 0;
+    int firstNameCeil   = 0;
+    int firstNameFlor   = 0;
 
-    for(nCharPosOfFullname = 0; nCharPosOfFullname < strlen(strName) && !isDone; nCharPosOfFullname++){
-        hasSeenFirstName = strName[nCharPosOfFullname] == ','; // Ceiling of last name section
-        hasSeenMiddileInitial = strName[nCharPosOfFullname] == '.'; // Ceiling of middle initial
-        hasNoMiddleInitial = nCharPosOfFullname + 1 == strlen(strName) && 
-                             strName[nCharPosOfFullname] != '.'; // Remember that the index starts at 0. So the index's ranges from 0 to strlen - 1, so Offset by 1 to make it from 1 to strlen.
+    for(charIndex = 0; charIndex < strlen(strName) ; charIndex++){
+        // Ceiling of last name section
+        hasSeenFirstName = strName[charIndex] == ','; 
+        // Ceiling of middle initial
+        hasSeenMiddileInitial = strName[charIndex] == '.'; 
+        /* 
+         * Remember that the index starts at 0. So the index's ranges from 0 to strlen - 1, 
+         * so Offset by 1 to make it from 1 to strlen.
+        */
+        hasNoMiddleInitial = charIndex + 1 == strlen(strName) && 
+                             strName[charIndex] != '.'; 
             
         if (hasSeenFirstName) {
-            firstNameFloor = nCharPosOfFullname + 2; // Floor / first char of first name is two chars away from ',' 
-            copySubnameFromName(output.lastName, strName, 0, nCharPosOfFullname);
+            firstNameFlor = charIndex + 2; // Floor / first char of first name is two chars away from ',' 
+            copySubnameFromName(output.lastName, strName, 0, charIndex);
         } else if (hasSeenMiddileInitial){
-            output.midI = strName[nCharPosOfFullname - 1];
-            firstNameCeiling = nCharPosOfFullname - 2; // Ceiling / last char of first name is two chars away from the middle initial.
-            copySubnameFromName(output.firstName, strName, firstNameFloor, firstNameCeiling);
+            output.midI = strName[charIndex - 1];
+            firstNameCeil = charIndex - 2; // Ceiling / last char of first name is two chars away from the middle initial.
+            copySubnameFromName(output.firstName, strName, firstNameFlor, firstNameCeil);
         } else if (hasNoMiddleInitial){
             output.midI = '\0';
-            strcpy(output.firstName, strName + firstNameFloor);
+            strcpy(output.firstName, strName + firstNameFlor);
         }
     }
 
     return output;
+}
+
+/**
+ * @brief Checks if given is a TripNo.
+ * @param *inputString: String to test if its an input;
+ * @return Boolean whether or not it is a TripNo.
+ * @retval 1 if it is
+ * @retval 0 
+ */
+int
+isStringTripNo(char *inputString){
+    int     i;
+    int     isTripNo            = FALSE;
+    int     isFirstCapitalized  = TRUE;
+    int     isSecondNumber      = TRUE;
+    char    tripNumberPart[4]   = "";
+    char    tripCodePart[3]     = "";
+    
+
+    if (strlen(inputString) > 6 || inputString[5] != '\n' && inputString[5] != '\0'){
+        return isTripNo;
+    }
+
+    tripCodePart[0] = inputString[0];
+    tripCodePart[1] = inputString[1];
+
+    tripNumberPart[0] = inputString[2];
+    tripNumberPart[1] = inputString[3];
+    tripNumberPart[2] = inputString[4];
+    
+    for (i = 0; i < 2; i++) {
+        if (tripCodePart[i] < 65 || tripCodePart[i] > 90) {
+            isFirstCapitalized = FALSE;
+        }
+    }
+
+    for (i = 0; i < 3; i++) {
+        if (tripNumberPart[i] < 48 || tripNumberPart[i] > 57) {
+            isSecondNumber = FALSE;
+        }
+    }
+
+    isTripNo = isFirstCapitalized && isSecondNumber;
+
+    return isTripNo;
+}
+
+void
+repeatGetTripNo(char *pInput, char choiceMenuGraphicsCode[], char *promtMessage, char *errorMessage){
+    
+    int TripNumber = 0;
+    int isWithinRange = FALSE;
+    int isValidTripCode = FALSE;
+    int typeReturned = 0;
+    int isIncorrectInput = 1;
+    char closingChar;
+    String7 strTripNumber   = "";
+    String7 TripCodePart    = "";
+    String7 TripNumberPart  = "";
+    do {
+        repeatGetString(strTripNumber, 6, choiceMenuGraphicsCode, promtMessage, errorMessage);
+        copySubnameFromName(TripCodePart, strTripNumber, 0, 2);
+        copySubnameFromName(TripNumberPart, strTripNumber, 2, 6);
+        TripNumber = atoi(TripNumberPart);
+        printf("E: \n%s + %d\n", TripCodePart, TripNumber);
+        isWithinRange = (TripNumber >= 101 && TripNumber <= 109) || 
+                        (TripNumber >= 150 && TripNumber <= 160);
+
+        isValidTripCode =   ((strcmp(TripCodePart, "AE") == 0 && isWithinRange) || 
+                                (strcmp(TripCodePart, "SP") == 0 && (TripNumber == 101 || TripNumber == 150))) &&
+                            strlen(TripNumberPart) > 0;
+
+
+        if (isValidTripCode)
+            strcpy(pInput, strTripNumber);
+
+    } while(!isValidTripCode);
 }

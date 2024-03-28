@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": ".",
-      "program": "build/Debug/outDebug",
+      "cwd": "c:/Users/Bobby/Documents/Logyre/02 Development/CCPROG2-Machine-Project/test/tRepeatGetPassenger",
+      "program": "c:/Users/Bobby/Documents/Logyre/02 Development/CCPROG2-Machine-Project/test/tRepeatGetPassenger/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

@@ -1,0 +1,239 @@
+ID:None 0
+ID:BusExpress 11
+$$$$$$$\                            $$$$$$$$\                                                             
+$$  __$$\                           $$  _____|                                                            
+$$ |  $$ |$$\   $$\  $$$$$$$\       $$ |      $$\   $$\  $$$$$$\   $$$$$$\   $$$$$$\   $$$$$$$\  $$$$$$$\ 
+$$$$$$$\ |$$ |  $$ |$$  _____|      $$$$$\    \$$\ $$  |$$  __$$\ $$  __$$\ $$  __$$\ $$  _____|$$  _____|
+$$  __$$\ $$ |  $$ |\$$$$$$\        $$  __|    \$$$$  / $$ /  $$ |$$ |  \__|$$$$$$$$ |\$$$$$$\  \$$$$$$\  
+$$ |  $$ |$$ |  $$ | \____$$\       $$ |       $$  $$<  $$ |  $$ |$$ |      $$   ____| \____$$\  \____$$\ 
+$$$$$$$  |\$$$$$$  |$$$$$$$  |      $$$$$$$$\ $$  /\$$\ $$$$$$$  |$$ |      \$$$$$$$\ $$$$$$$  |$$$$$$$  |
+\_______/  \______/ \_______/       \________|\__/  \__|$$  ____/ \__|       \_______|\_______/ \_______/ 
+                                                        $$ |                                              
+                                                        $$ |                                              
+                                                        \__|                                                      
+ID:MainMenu 7;
+#>==<|[?] Main Menu |>======================#
+Y                                           Y
+|    [a]: Admin Controls                    |
+|    [b]: Passenger Commands                |
+|    [c]: Exit Program                      |
+A                                           A
+#>-----------------------------------------<#
+ID:PassMenu 10;
+#>-----------<#>==<|[!] User Permission Required |>========<#
+Y             Y                                             Y
+|   /\| |/\   |    #=====================#                  |
+|   \/###\/   |      Entered ADMIN SPACE.                   |
+| --|##V##|-- |    #=====================#                  | 
+| --|ADMIN|-- |                                             |
+|   /\###/\   |    Please Enter the Password to continue.   |
+|   \/| |\/   |    Type "quit" and enter to exit.           |
+A             A                                             A
+#>-----------<#>-------------------------------------------<#
+ID:AdminMenu 15;
+#>==<|[O] Admin Commands |>================<#
+Y                                           Y
+|    Accessed elevated CMDS. Allowed        |
+|    to the ff. Admin Commands:             |
+A                                           A
+#=>---------------------------------------<=#
+Y                                           Y
+|    [a]: View Passengers                   |
+|    [b]: Count Passenger at Stops          |
+|    [c]: Check Passenger Info.             |
+|    [d]: Load Passenger Info.              |
+|    [e]: Search Passenger                  |
+|    [f]: Go Back                           |
+A                                           A
+#>-----------------------------------------<#
+ID:PassengerMenu 6;
+#>==<|[?] Passenger Commands |>------------<#
+|                                           |
+|    [a]: Search for Trip                   |
+|    [b]: Go Back                           |
+|                                           |
+#>-----------------------------------------<#
+ID:CountPassenger 6;
+#>==<|[*] Count Passenger |>===============<#
+|                                           |
+|   Please input the Trip Number to Count.  |
+|   Insert '0' to go back.                  |
+|                                           |
+#>-----------------------------------------<#
+ID:SearchPass 6;
+#>==<|[*] Check Passenger |>===============<#
+|                                           |
+|   Please input the Last Name of Passenger |
+|   Insert "quit" to go back.               |
+|                                           |
+#>-----------------------------------------<#
+ID:SearchResult1 2;
+#>==<|[*] Searches |>======================<#
+Y                                           Y
+ID:SearchResult2 2;
+A                                           A
+#\-----------------------------------------/#
+ID:SearchResult3 9;
+#/-----------------------------------------\#
+Y                                           Y
+|   Insert a number to perform actions      |
+|   Insert the following:                   |
+|        - '>0' to view individuals         |
+|        -  '0' to recheck search.          |
+|        - '-1' to quit                     |
+A                                           A
+#>-----------------------------------------<#                    
+ID:EnterDate 5;
+#>-----------------------------------------<#
+Y                                           Y
+|   Please Enter the Date Today!            |
+A                                           A
+#>-----------------------------------------<# 
+ID:DropOff1 3;
+.
+#>==<|[*] Resulting Counts |>==============<#
+Y                                           Y
+ID:DropOff2 3;
+A                                           A
+#>==<|[*] Drop Offs |>=====================<#
+Y                                           Y
+ID:DropOff3 3;
+A                                           A
+#>-----------------------------------------<#
+.
+ID:PassEmbark1 3;
+#>==<|[*] Passenger Embarkation |>============================<#
+Y                                                              Y
+| #>-<Trip No>-<#>-<Capacity>-<#>--<Route>------------------<#
+ID:PassEmbark2 2;
+| #>-----------<#>------------<#>---------------------------<#
+A                                                              A
+ID:PassEmbark3 5;
+#>==<|[*] Required TripNo. |>=================================<#
+Y                                                              Y
+|   Please Input the Trip Number you want to board on.         |
+A                                                              A
+#>------------------------------------------------------------<#
+ID:PassEmbark4-1 7;
+#>===<|[*] Identification |>==================================<#
+Y  ###  Y                                                      Y
+| #UWU# |      Please enter your:   - [-] FIRST NAME           |
+|  ###  |                           - [ ] LAST NAME            |
+|       |                           - [ ] MIDDLE INITIAL       |
+A %###% A                                                      A
+#>-----<#>----------------------------------------------------<#
+ID:PassEmbark4-2 7;
+#>===<|[*] Identification |>==================================<#
+Y  ###  Y                                                      Y
+| #UWU# |      Please enter your:   - [X] FIRST NAME           |
+|  ###  |                           - [-] LAST NAME            |
+|       |                           - [ ] MIDDLE INITIAL       |
+A %###% A                                                      A
+#>-----<#>----------------------------------------------------<#
+ID:PassEmbark4-3 7;
+#>===<|[*] Identification |>==================================<#
+Y  ###  Y                                                      Y
+| #UWU# |      Please enter your:   - [X] FIRST NAME           |
+|  ###  |                           - [X] LAST NAME            |
+|       |                           - [-] MIDDLE INITIAL       |
+A %###% A                                                      A
+#>-----<#>----------------------------------------------------<#
+ID:PassEmbark4-4 7;
+#>===<|[*] Identification |>==================================<#
+Y  ###  Y                                                      Y
+| #UWU# |      Please enter your:   - [X] FIRST NAME           |
+|  ###  |                           - [X] LAST NAME            |
+|       |                           - [X] MIDDLE INITIAL       |
+A %###% A                                                      A
+#>-----<#>----------------------------------------------------<#
+ID:PassEmbark5 7;
+#>-----<#>----------------------------------------------------<#
+Y  ###  Y                                                      Y
+| #UWU# |                                                      |
+|  ###  |               Enter your ID NUMBER:                  |
+|       |                                                      |
+A %###% A                                                      A
+#>-----<#>----------------------------------------------------<#
+ID:PassEmbark6 27;
+#>==<|[*] Identification |>===================================<#
+Y                                                              Y
+|   [1]: Faculty and ASF with Inter-campus assignments         |
+|                                                              |
+|   [2]: Students with...                                      |
+|       > Inter-campus enrolled subjects; or                   |
+|       > enrolled in thesis using Inter-campus facilities     |
+|                                                              |
+|   [3]: Researchers                                           |
+|                                                              |
+|   [4]: School Administrators                                 |
+|       > Academic Coordinators level and up                   |
+|           for Faculty and ASF; and                           |
+|       > Director level and up                                |
+|           for APSP                                           |
+|                                                              |
+|   [5]: University Fellows                                    |
+|                                                              |
+|   [6]: Employees and Students with official business         |
+A                                                              A
+#>-----<#>----------------------------------------------------<#
+Y  ###  Y                                                      Y
+| #UWU# |   Please enter your Identification honestly!         |
+|  ###  |                                                      |
+|       |       Thank you for your cooperation.                |
+A %###% A                                                      A
+#>-----<#>----------------------------------------------------<#
+ID:PassEmbark7 8;
+#>--<|[*] Route |>--------------------------------------------<#
+Y                                                              Y
+|   Embarkation Point:                                         |
+|      o [0]: DLSU Manila Campus - South Gate Driveway         |
+|      o [1]: DLSU Laguna Campus - Milagros Del Rosario        |
+|       (MRR) Building - East Canopy                           |
+A                                                              A
+#>------------------------------------------------------------<#
+ID:PassEmbark8 12;
+#>--<|[*] Route |>--------------------------------------------<#
+Y                                                              Y
+|   Route:                                                     |
+|   DLSU Manila Campus - South Gate Driveway                   |
+|       o [0]: Mamplasan Exit                                  |
+|       o [1]: ETON Exit                                       |
+|   DLSU Laguna Campus - Milagros Del Rosario (MRR)            |
+|   Building - East Canopy                                     |
+|       o [2]: Estrada                                         |
+|       o [3]: Buendia/LRT                                     |
+A                                                              A
+#>------------------------------------------------------------<#
+ID:PassEmbark9 31;
+#>---<|[*] Route |>-------------------------------------------<#
+Y                                                              Y
+|   Via Mamplasan Exit:                                        |
+|     o [00]: 1st drop-off point - Mamplasan Toll Exit         |
+|     o [01]: 2nd drop-off point - Phase 5, San Jose Village   |
+|     o [02]: 3rd drop-off point - Milagros Del Rosario        |
+|           (MRR) Building - East Canopy                       |
+*                                                              *
+|   Via ETON Exit:                                             |
+|     o [03]: 1st drop-off point - Laguna Blvd. Guard House    |
+|       (across Paseo PHOENIX Gasoline Station)                |
+|     o [04]: 2nd drop-off point - Milagros Del Rosario        |
+|       (MRR) Building - East Canopy                           |
+*                                                              *
+|   Via Estrada:                                               |
+|     o [05]: 1st drop-off point - Petron Gasoline Station     |
+|       along Gil Puyat Avenue                                 |
+|     o [06]: 2nd drop-off point - Gate 4: Gokongwei Gate      |
+|     o [07]: 3rd drop-off point - Gate 2: North Gate (HSSH)   |
+|     o [08]: 4th drop-off point - Gate 1: South Gate          |
+|       (LS Building Entrance)                                 |
+*                                                              *
+|   Via Buendia/LRT:                                           |
+|     o [09]: 1st drop-off point - College of St. Benilde      |
+|       (CSB) along Taft Avenue                                |
+|     o [10]: 2nd drop-off point - Gate 4: Gokongwei Gate      |
+|     o [11]: 3rd drop-off point - Gate 2: North Gate (HSSH)   |
+|     o [12]: 4th drop-off point - Gate 1: South Gate          |
+|       (LS Building Entrance)                                 |
+A                                                              A
+#>------------------------------------------------------------<#
+
