@@ -313,7 +313,7 @@ adminCountPassengerDropOff(struct Bus16 TripDatabase[]){
         printGraphics("DropOff1");
         printf("| Trip: %s \n| Results: %d\n", inputTripNumber, results);
         if (results > 0) {            
-            DropOffResults = countWordFrequency(pickedTrip, results);
+            DropOffResults = countDropOffFrequency(&pickedTrip);
             printDropOffs(&DropOffResults);
         }
         printGraphics("DropOff3");
@@ -322,11 +322,10 @@ adminCountPassengerDropOff(struct Bus16 TripDatabase[]){
 }
 
 /**
- * @brief  
- * @note   
+ * @brief Admin command for 
  * @param  *tripDate: 
  * @param  TripDatabase[]: 
- * @retval None
+ * @return None
  */
 void 
 adminViewPassengerInfo(struct Bus16 TripDatabase[]){
@@ -347,12 +346,12 @@ adminViewPassengerInfo(struct Bus16 TripDatabase[]){
         printf("Trip: %s\n", inputTripNumber);    
         passengers = tripStruct_SearchBusTrip(inputTripNumber, TripDatabase, &BusHolder, &loc);
         
-        printPassengerInfo(inputTripNumber, &BusHolder, passengers);
+        printListofPassenger(inputTripNumber, &BusHolder);
     }
 }
 
 /**
- * @brief Searches the last name of a passenger in a trip file and lets the user search each one.
+ * @brief Admin command for searching the last name of a passenger in a trip file and lets the user search each one.
  * @note   
  * @param *dateToday: A DateDMY struct that represents the date of the trip to be opened
  * @return void
@@ -363,7 +362,6 @@ adminSearchPassenger(struct Bus16 Trips[]){
     String63 strFiller = "Admin searches the passenger in a trip.";
     String15 nameToSearch;
     int isFinding = TRUE;
-    
     
     printSingleColorText( FG_YELLOW, strFiller);
 
@@ -381,7 +379,12 @@ adminSearchPassenger(struct Bus16 Trips[]){
     }
 }
 
-
+/**
+ * @brief Admin command for embarkation using a .txt file.
+ * @param TripDatabase[]: a pointer to the Bus16 struct array. 
+ * @param exits[]: a pointer to a dropOffPointList array.
+ * @return None
+ */
 void 
 adminEmbarkation(struct Bus16 TripDatabase[], struct dropOffPointList exits[]){
     struct Passenger    newPassenger;
@@ -446,8 +449,14 @@ adminEmbarkation(struct Bus16 TripDatabase[], struct dropOffPointList exits[]){
     }
 }
 
+
+/**
+ * @brief Admin command for loading a .txt savefile into current TripDatabase[]  
+ * @param TripDatabase[]: a pointer to a Bus16 struct array.
+ * @param exits[]: a pointer to the array of dropOffPointList struct.
+ */
 void
-adminLoadFile(struct Bus16 TripDatabase[], struct dropOffPointList *exits){
+adminLoadFile(struct Bus16 TripDatabase[], struct dropOffPointList exits[]){
     FILE *databaseFile;
     struct DateDMY  date;
     String31 fileName;
@@ -459,11 +468,9 @@ adminLoadFile(struct Bus16 TripDatabase[], struct dropOffPointList *exits){
     
     while (isChoosingFile){
         StringfromDateDMY(fileName, &date, TRUE);
+
         databaseFile = fopen(fileName, "r");
-        if (databaseFile == NULL)
-            isFileExist = FALSE;
-        else 
-            isFileExist = TRUE;
+        isFileExist = (databaseFile == NULL) ? FALSE : TRUE;
         fclose(databaseFile);
 
         if (!isFileExist) {
@@ -485,11 +492,13 @@ adminLoadFile(struct Bus16 TripDatabase[], struct dropOffPointList *exits){
 // |===| MENU SECTION |=============================|
 
 /**
- * TODO fill it functions accessible to a passenger based on the diagram.
- * @brief Contains the functions accessible to a regular user 
+ * @brief Menu for User
+ * @param BusTripDatabase[]: an array of Bus16 structs
+ * @param *date: a pointer to a DateDMY struct of today
+ * @param exits[]: an array of dropOffPointList struct
  */
 void 
-menuPassenger(struct Bus16 Trips[], struct dropOffPointList *exits){
+menuPassenger(struct Bus16 BusTripDatabase[], struct dropOffPointList *exits){
     char inputPassMenu;
     String63 errorMessage = "Dear Passenger, Please select the following valid cmds\n";
     String15 graphicCode = "PassengerMenu";
@@ -499,7 +508,7 @@ menuPassenger(struct Bus16 Trips[], struct dropOffPointList *exits){
         switch(inputPassMenu) {
             case 'A':
             case 'a':
-                userEmbarkation(Trips, exits);
+                userEmbarkation(BusTripDatabase, exits);
                 break;
             default:
                 printErrorMessage(errorMessage);
@@ -512,51 +521,54 @@ menuPassenger(struct Bus16 Trips[], struct dropOffPointList *exits){
 }
 
 /**
- * TODO fill it functions accessible to an admin based on the diagram.
- * @brief Contains the functions accessible to a regular user 
- * 
+ * @brief Menu for Admin
+ * @param BusTripDatabase[]: an array of Bus16 structs
+ * @param *date: a pointer to a DateDMY struct of today
+ * @param exits[]: an array of dropOffPointList struct
  */
 void 
-menuAdmin(struct Bus16 BusTrip[], int size, struct DateDMY *date, struct dropOffPointList exits[]){
-    String255 realPass = "Admin123"; // to be changed
-    String63 errorMessage = "Please input a valid admin cmd.\n";
-    String15 graphicCode = "AdminMenu";
-    String15 strPrompt = "\t> Command: ";
+menuAdmin(struct Bus16 BusTripDatabase[], struct DateDMY *date, struct dropOffPointList exits[]){
+    String255 realPass      = "Admin123"; // to be changed
+    String63 errorMessage   = "Please input a valid admin cmd.\n";
+    String15 graphicCode    = "AdminMenu";
+    String15 strPrompt      = "\t> Command: ";
+
     int isChoosingAdminCmds = FALSE;
     int isInputing = TRUE;
     char userInput;
+
     system("cls");
+
     while (isInputing && !isChoosingAdminCmds)
-        passwordMenu(&isChoosingAdminCmds, &isInputing, realPass);
+        passwordChecker(&isChoosingAdminCmds, &isInputing, realPass);
   
     while (isChoosingAdminCmds){
         system("cls");
         repeatGetChar(&userInput, graphicCode, strPrompt, errorMessage);
-
         switch(userInput){
             case 'A':
             case 'a':
-                adminNoOfPassenger(BusTrip);
+                adminNoOfPassenger(BusTripDatabase);
                 break;
             case 'B':
             case 'b':
-                adminCountPassengerDropOff(BusTrip);
+                adminCountPassengerDropOff(BusTripDatabase);
                 break;
             case 'C':
             case 'c':
-                adminViewPassengerInfo(BusTrip);
+                adminViewPassengerInfo(BusTripDatabase);
                 break;
             case 'D':
             case 'd':
-                adminSearchPassenger(BusTrip);
+                adminSearchPassenger(BusTripDatabase);
                 break;
             case 'E':
             case 'e':
-                adminEmbarkation(BusTrip, exits);
+                adminEmbarkation(BusTripDatabase, exits);
                 break;
             case 'F':
             case 'f':
-                adminLoadFile(BusTrip, exits);
+                adminLoadFile(BusTripDatabase, exits);
                 break;
             case 'G':
             case 'g':

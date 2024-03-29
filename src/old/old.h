@@ -481,7 +481,7 @@ GetStringFromNameField(char *strName, struct NameField name){
 }
 
 void
-copySubnameFromName(char *strSubname, char *strFullname, int subnameStartingIndex, int subnameLastIndex){
+copySubstringFromString(char *strSubname, char *strFullname, int subnameStartingIndex, int subnameLastIndex){
     int nCharPosOfSubname = 0;
 
     for(nCharPosOfSubname = subnameStartingIndex; nCharPosOfSubname < subnameLastIndex; nCharPosOfSubname++)
@@ -515,11 +515,11 @@ GetNameFromString(char *strName){
         
         if (hasSeenFirstName) {
             firstNameFloor = nCharPosOfFullname + 2;
-            copySubnameFromName(output.lastName, strName, 0, nCharPosOfFullname);
+            copySubstringFromString(output.lastName, strName, 0, nCharPosOfFullname);
         } else if (hasSeenMiddileInitial){
             output.midI = strName[nCharPosOfFullname - 1];
             firstNameCeiling = nCharPosOfFullname - 2; // Ceiling / last char of first name is two chars away from the middle initial.
-            copySubnameFromName(output.lastName, strName, firstNameFloor, firstNameCeiling);
+            copySubstringFromString(output.lastName, strName, firstNameFloor, firstNameCeiling);
         } else if (hasNoMiddleInitial){
             output.midI = '\0';
             strcpy(output.firstName, strName + firstNameFloor);
@@ -565,7 +565,7 @@ printPassenger(struct Passenger *Passenger){
 }
 
 void 
-passwordMenu(int *isChoosingAdminCmds, int *isInputingPass, char *realPass){
+passwordChecker(int *isChoosingAdminCmds, int *isInputingPass, char *realPass){
     String127 inputPass;
     String63 errorMessage = "Error, not a string.";
     String15 graphicCode = "PassMenu";
@@ -1079,7 +1079,7 @@ void menuAdmin(){
     
     
     while (isInputing && !isChoosingAdminCmds)
-        passwordMenu(&isChoosingAdminCmds, &isInputing, realPass);
+        passwordChecker(&isChoosingAdminCmds, &isInputing, realPass);
 
     while (isChoosingAdminCmds){
         system("cls");

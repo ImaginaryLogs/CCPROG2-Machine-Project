@@ -1,79 +1,5 @@
 #include"utilsBase.h"
 
-// |===| Print Functions |===================================|
-
-void
-printPassenger(struct Passenger *Passenger){
-    printf("\n#>---<|[>] Result >--------------------------------------------#\n");
-    printf("Y\n");
-    printf("|   Trip Number:\t\t %s\n", Passenger->tripNumber);
-    printf("|   Embarkation Point:\t %s\n", Passenger->embarkationPoint);
-    printf("|   Passenger Name:\t %s, %s ", Passenger->passengerName.lastName, Passenger->passengerName.firstName);
-    if (Passenger->passengerName.midI){
-        printf("%c.", Passenger->passengerName.midI);
-    }
-    printf("\n");
-    printf("|   ID Number:\t\t %u\n", Passenger->idNumber);
-    printf("|   Priority Number:\t %u\n", Passenger->priorityNumber);
-    printf("|   Drop off Point:\t %s\n", Passenger->dropOffPoint);
-    printf("A\n");
-    printf("#>--------------------------------------------------------------#\n\n");
-}
-
-
-void
-printBus16 (struct Bus16 Trip){
-    int i;
-    printf("Trip:              \'%s\'\n", Trip.TripID);
-    printf("Time:               %02d:%02d\n", Trip.timeOfTrip.hour, Trip.timeOfTrip.minute);
-    printf("Passengers:         %d\n", Trip.volume);
-    printf("Embarkation Point:  %s\n\n", Trip.embarkationPoint);
-    for(i = 0; i < Trip.volume ;i++){
-        printf("Seat: %d", i);
-        printPassenger(&Trip.Passengers[i]);
-    }
-}
-
-void
-printPassengerInfo (TripNo inputTripNumber, struct Bus16 *BusTrip, int passengers){
-    struct Bus16 sortedBusTrip;
-    struct Passenger tempHolder;
-    String255 nameBuffer = "";    
-    int i;
-    int j;
-    int min;
-    sortedBusTrip = *BusTrip;
-    if (passengers > 0){   
-        for(i = 0; i < passengers - 1; i++){
-            min = i;
-            for (j = i; j < passengers; j++){
-                if (sortedBusTrip.Passengers[j].priorityNumber < sortedBusTrip.Passengers[min].priorityNumber){
-                    min = j;
-                }
-            }
-            if (min != j){
-                tempHolder = sortedBusTrip.Passengers[j];
-                sortedBusTrip.Passengers[i] = sortedBusTrip.Passengers[min];
-                sortedBusTrip.Passengers[min] = tempHolder;
-            }
-        }
-        printf("Passengers of %s:\n", inputTripNumber);
-        printf("#>-No-<#> Priority No.<#> ID  Number <#> Name ----------------<#\n");
-        printf("Y      Y               Y              Y\n");
-        for(i = 0; i < passengers; i++){
-            printf("|  %02d  ", i);
-            printf("|       %d       |", BusTrip->Passengers[i].priorityNumber);
-            printf("   %d   |", BusTrip->Passengers[i].idNumber);
-            printf(" %s \n", GetStringFromNameField(nameBuffer, BusTrip->Passengers[i].passengerName));
-            strcpy(nameBuffer, "");
-        }
-        printf("A      A               A              A\n");
-        printf("#>----<#>-------------<#>------------<#>----------------------<#\n");
-    } else {
-        printErrorMessage("Trip not yet created.\n");
-    }
-}
-
 void
 embarkationCodeEquivalent(char * embarkationPoint, char *outputCode){
     if (strcmp(embarkationPoint, "DLSU Manila Campus - South Gate Driveway") == 0){
@@ -83,17 +9,148 @@ embarkationCodeEquivalent(char * embarkationPoint, char *outputCode){
     }
 };
 
+// |===| Print Functions |===================================|
+
+/**
+ * @brief Prints passenger information.
+ * @param *Passenger: points to a passenger struct to print.
+ * @return void
+ */
+void
+printPassenger(struct Passenger *Passenger){
+    String127 Name = "";
+    printf("\n#>---<|[>] Result >----------------------------------------------------#\n");
+    printf("Y\n");
+    printf("|   Trip Number:\t\t %s\n", Passenger->tripNumber);
+    printf("|   Embarkation Point:\t %s\n", Passenger->embarkationPoint);
+    printf("|   Passenger Name:\t %s\n", GetStringFromNameField(Name, Passenger->passengerName));
+    printf("|   ID Number:\t\t %u\n", Passenger->idNumber);
+    printf("|   Priority Number:\t %u\n", Passenger->priorityNumber);
+    printf("|   Drop off Point:\t %s\n", Passenger->dropOffPoint);
+    printf("A\n");
+    printf("#>----------------------------------------------------------------------#\n\n");
+}
+
+/**
+ * @brief Prints information on Bus16. 
+ * @param Trip: a Bus16 struct of the Trip to print
+ * @return void 
+ */
+void
+printBus16 (struct Bus16 Trip){
+    int i;
+    printf("#>-<|[>] Trip information |>-------------------------------------------#\n");
+    printf("Y\n");
+    printf("|   Trip ID:\'%s\'\n", Trip.TripID);
+    printf("|   Embarkation Point:\t%s\n\n", Trip.embarkationPoint);
+    printf("|   Time of Departure:\t%02d:%02d\n", Trip.timeOfTrip.hour, Trip.timeOfTrip.minute);
+    printf("|   No. of Passengers:\t%d\n", Trip.volume);
+    printf("A\n");
+    printf("#>---------------------------------------------------------------------#\n");
+    for(i = 0; i < Trip.volume ;i++){
+        printf("Seat: %d\n", i);
+        printPassenger(&Trip.Passengers[i]);
+    }
+}
+
+/**
+ * @brief Prints a list of passenger
+ * @param inputTripNumber: a string containing the trip number.
+ * @param *BusTrip: a pointer to the Bus16 struct of the Trip to print.
+ */
+void
+printListofPassenger(TripNo inputTripNumber, struct Bus16 *BusTrip){
+    HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    struct Bus16        sortedBusTrip;
+    struct Passenger    tempHolder;
+    String255 nameBuffer = "";
+    int nColor;  
+    int i;
+    int j;
+    int min;
+
+    sortedBusTrip = *BusTrip;
+    if (BusTrip->volume > 0) {
+        printErrorMessage("Trip not yet created.\n");
+        return;
+    }
+
+    // SORTING ALGORITHM
+    for(i = 0; i < BusTrip->volume - 1; i++){
+        min = i;
+        
+        for (j = i; j < BusTrip->volume; j++){
+            if (sortedBusTrip.Passengers[j].priorityNumber < sortedBusTrip.Passengers[min].priorityNumber){
+                min = j;
+            }
+        }
+
+        if (min != j){
+            tempHolder = sortedBusTrip.Passengers[j];
+            sortedBusTrip.Passengers[i] = sortedBusTrip.Passengers[min];
+            sortedBusTrip.Passengers[min] = tempHolder;
+        }
+    }
+
+    // PRINTS INFORMATION
+    printf("Passengers of Trip %s:\n", BusTrip->TripID);
+    printf("#>-No-<#> Priority No.<#> ID  Number <#> Name -------------------------------<#\n");
+    printf("Y      Y               Y              Y\n");
+    for(i = 0; i < BusTrip->volume; i++){
+        switch(BusTrip->Passengers[i].priorityNumber) {
+            case '1':
+                nColor = FG_RED | FG_INTEN;
+                break;
+            case '2':
+                nColor = FG_RED;
+                break;
+            case '3':
+                nColor = FG_YELLOW | FG_INTEN;
+                break;
+            case '4':
+                nColor = FG_YELLOW;
+                break;
+            case '5':
+                nColor = FG_GREEN | FG_INTEN;
+                break;
+            case '6':
+                nColor = FG_GREEN;
+                break;
+        }
+        printf("|");
+        SetConsoleTextAttribute(hConsoleOutput, nColor);
+        printf("  %02d  ", i);
+        SetConsoleTextAttribute(hConsoleOutput, FG_WHITE);
+        printf("|       %d       |", BusTrip->Passengers[i].priorityNumber);
+        printf("   %d   |", BusTrip->Passengers[i].idNumber);
+        printf(" %s \n", GetStringFromNameField(nameBuffer, BusTrip->Passengers[i].passengerName));
+        strcpy(nameBuffer, "");
+    }
+    printf("A      A               A              A\n");
+    printf("#>----<#>-------------<#>------------<#>------------------------------------<#\n");
+    
+}
+
+/**
+ * @brief Prints search result in the SearchResultField
+ * @param *lastNameResults: a pointer to a SearchResultField struct.
+ * @param BusTrip[]: an array of Bus15 structs to refer from.
+ * @param *nameToSearch: a string of the name to search through.
+ * @return void
+ */
 void
 printSearchResults (struct SearchResultField *lastNameResults, struct Bus16 BusTrip[], char *nameToSearch){
-    int isSearching = TRUE;
-    int isQuitingSearch = FALSE;
-    int hasChosenBeyondGiven = FALSE;
-    int hasChosenAResult = FALSE;
+    struct Passenger ResultingPassenger;
+    int isQuitingSearch         = FALSE;
+    int hasChosenBeyondGiven    = FALSE;
+    int hasChosenAResult        = FALSE;
+    int isSearching             = TRUE;
+
     int tripResultIndex = 0;
     int passResultIndex = 0;
-    int i;
+
     int userChoice;
-    struct Passenger ResultingPassenger;
+    int i;
     
 
     if (!lastNameResults->size) {
@@ -116,6 +173,7 @@ printSearchResults (struct SearchResultField *lastNameResults, struct Bus16 BusT
         hasChosenBeyondGiven = userChoice > lastNameResults->size;
         hasChosenAResult = userChoice > 0 && userChoice <= lastNameResults->size;
         printf("Result: %d %d", userChoice, hasChosenAResult);
+
         if (isQuitingSearch) {
             isSearching = FALSE;
             system("cls");
@@ -123,7 +181,6 @@ printSearchResults (struct SearchResultField *lastNameResults, struct Bus16 BusT
             system("cls");
             printErrorMessage("Search number is invalid.");
         } else if (hasChosenAResult) {
-            
             tripResultIndex = lastNameResults->tripNumber[userChoice - 1];
             passResultIndex = lastNameResults->passengerIndex[userChoice - 1];
             ResultingPassenger = BusTrip[tripResultIndex].Passengers[passResultIndex];
@@ -324,116 +381,6 @@ containsDropOffPointList (struct dropOffPointList *input, char *dropOff){
 
 // |===| Trip File Functions |=============================|
 
-ErrorInt
-tripFile_GetCurrentPassenger (FILE * pFileBusTrip, struct Passenger *keyPassenger){
-    String255 strName = "";
-    String15 strDateOfTrip = "";
-    String15 strTimeOfTrip = "";
-    String15 strPriorityNumber = "";
-    String15 strIdNumber = "";
-
-    if (feof(pFileBusTrip)) {
-        fclose(pFileBusTrip);
-        return EROR_KEY_NOT_FOUND;
-    };
-
-    fgets(keyPassenger->tripNumber, 255, pFileBusTrip);
-    fgets(keyPassenger->embarkationPoint, 255, pFileBusTrip);
-    fgets(strName, 255, pFileBusTrip);
-    fgets(strIdNumber, 255, pFileBusTrip);
-    fgets(strPriorityNumber, 255, pFileBusTrip);
-    fgets(keyPassenger->dropOffPoint, 255, pFileBusTrip);
-    
-    // Clean the Key's details;
-    removeNewline(keyPassenger->tripNumber);
-    removeNewline(keyPassenger->embarkationPoint);
-    removeNewline(strName);
-    removeNewline(strIdNumber);
-    removeNewline(strPriorityNumber);
-    removeNewline(keyPassenger->dropOffPoint);
-    
-    keyPassenger->passengerName = GetNameFromString(strName);
-    keyPassenger->idNumber = atoi(strIdNumber);
-    keyPassenger->priorityNumber = atoi(strPriorityNumber);
-    return PROG_SUCCESS;
-}
-
-ErrorInt 
-tripFile_ReturnPassenger (struct DateDMY *tripDate, struct Passenger *keyPassenger, int key){
-    FILE *pFileBusTrip;
-    String255 temporaryBuffer = "";
-    
-    String15 fileName = "";
-
-    struct TimeHM tempTime;
-    ErrorInt nIndex = -1;
-    int isFileDoesNotExist = 0;
-    int line;
-    // File Handling
-    StringfromDateDMY(fileName, tripDate, TRUE);
-    pFileBusTrip = fopen(fileName, "r");
-    isFileDoesNotExist = pFileBusTrip == NULL;
-
-    if (isFileDoesNotExist) {   
-        fclose(pFileBusTrip);
-        return EROR_FILE_NOT_FOUND;
-    }
-
-    // Skip Unnecessary Lines;
-    for(line = 0; line < key * 7 ; line++)
-        if(fgets(temporaryBuffer, 255, pFileBusTrip) == NULL) {
-            fclose(pFileBusTrip);
-            printErrorMessage("EOF REACHED! Search others.");
-            return EROR_KEY_NOT_FOUND;
-        }
-    
-    // Update Key;
-    ErrorInt isSuccessfulRead = tripFile_GetCurrentPassenger(pFileBusTrip, keyPassenger);
-    if (isSuccessfulRead = PROG_SUCCESS){
-        fclose(pFileBusTrip);
-        return PROG_SUCCESS;
-    }
-
-    return EROR_KEY_NOT_FOUND;
-}
-
-int
-tripFile_SearchSameTrip (struct DateDMY *tripDate, TripNo tripNumber, struct Bus16 BusOfTrip){
-    FILE *pFileBusTrip;
-    String15 fileName = "";
-    struct Passenger tempPassenger;
-    int isFileDoesNotExist = FALSE;
-    int nPassengerInTrip;
-    int nPassengerSearched;
-
-    // File Handling
-    StringfromDateDMY(fileName, tripDate, TRUE);
-    pFileBusTrip = fopen(fileName, "r");
-    isFileDoesNotExist = pFileBusTrip == NULL;
-    if (isFileDoesNotExist) {   
-        fclose(pFileBusTrip);
-        return EROR_FILE_NOT_FOUND;
-    }
-    int hasFoundPassenger = FALSE;
-    
-    nPassengerInTrip = 0;
-    nPassengerSearched = 0;
-
-    while (hasFoundPassenger != -1){
-        hasFoundPassenger = tripFile_ReturnPassenger(tripDate, &tempPassenger, nPassengerSearched);
-
-        if(strcmp(tempPassenger.tripNumber, tripNumber) == 0) {
-            BusOfTrip.Passengers[nPassengerInTrip] = tempPassenger;
-            nPassengerInTrip++;
-        }
-
-        nPassengerSearched++;
-    }
-
-    fclose(pFileBusTrip);
-    return nPassengerInTrip;
-}
-
 int
 tripFile_ReturnLastname (struct DateDMY *tripDate, struct Bus16 BusTrip, char *LastName, struct SearchResultField *nameResults){
     FILE *pFileBusTrip;
@@ -467,7 +414,7 @@ tripFile_ReturnLastname (struct DateDMY *tripDate, struct Bus16 BusTrip, char *L
         }
 
         removeNewline(strName);
-        nameBuffer = GetNameFromString(strName);
+        nameBuffer = GetNameFieldFromString(strName);
 
         if (isSubString(LastName, nameBuffer.lastName)){
             printf("%s\n",strName);
@@ -492,19 +439,6 @@ tripFile_ReturnLastname (struct DateDMY *tripDate, struct Bus16 BusTrip, char *L
     return nMatchedNames;
 }
 
-int
-tripFileSearch_PassengerFull (struct DateDMY *tripDate, struct Passenger *keyPassenger){
-    int i;
-    int isFound = 0;
-    int key = -1;
-    for(i = 0; i < 16 && !isFound; i++){
-        isFound = tripFile_ReturnPassenger(tripDate, keyPassenger, i) == 0 ? TRUE : -1;
-        if (isFound > 0)
-            key = i;
-    }
-    return key;
-}
-
 /**
  * @brief  
  * @param *tripDate Date Struct of the Trip.
@@ -512,67 +446,14 @@ tripFileSearch_PassengerFull (struct DateDMY *tripDate, struct Passenger *keyPas
  * @param BusTrip A struct Bus16 pointer to the array of Bustrips.
  * @return Number of passengers in the trip.
  */
-int
-tripFile_GetBusTrip2 (struct DateDMY *tripDate, TripNo inputTrip, struct Bus16 *BusTrip, struct dropOffPointList *exits){
-    struct Passenger holder;
-    FILE *pFileBusTrip;
-    String255 temporaryBuffer = "";
-    String255 strName = "";
-    String15 fileName = "";
-    int i;
-    struct TimeHM tempTime;
-    int isFileDoesNotExist = FALSE;
-    int hasMatchedTrip = FALSE;
-    int hasNotFoundEOF = TRUE;
-    int ReadingState = FALSE;
-    int nLineIgnored = 0;
-    int nBusPassenger = 0;
-    int nFoundDropOff = 0;
-
-    // File Handling
-    StringfromDateDMY(fileName, tripDate, TRUE);
-    
-    pFileBusTrip = fopen(fileName, "r");
-    isFileDoesNotExist = pFileBusTrip == NULL;
-
-    if (isFileDoesNotExist) {   
-        fclose(pFileBusTrip);
-        printErrorMessage("tripFile_GetBusTrip FAIL.\n ERROR: FILE DOES NOT EXIST");
-        return EROR_FILE_NOT_FOUND;
-    }
-
-    while (hasNotFoundEOF) {
-        
-        ReadingState = tripFile_GetCurrentPassenger(pFileBusTrip, &holder);
-
-        if (ReadingState == EROR_KEY_NOT_FOUND){
-            hasNotFoundEOF = FALSE;
-            return nBusPassenger;
-        }
-        
-        hasMatchedTrip = strcmp(holder.tripNumber, inputTrip) == 0 && hasNotFoundEOF;
-
-        if (hasMatchedTrip && nBusPassenger == 0) {
-        	nFoundDropOff = 0;
-            for(i = 0; i < 4 && !nFoundDropOff; i++){
-                if (containsDropOffPointList(exits + i, holder.dropOffPoint)){
-                	strcpy(BusTrip->route, exits[i].route);
-                	nFoundDropOff = 1;
-				}
-            }
-        }
-        
-        if (hasMatchedTrip) {
-            BusTrip->Passengers[nBusPassenger] = holder;
-            BusTrip->volume++;
-            nBusPassenger++;
-        }
-    }
-    
-    return nBusPassenger;
-}
 
 
+/**
+ * @brief  
+ * @note   
+ * @param  *inputTripNo: 
+ * @retval 
+ */
 int
 findIndexOfTripNo(char *inputTripNo){
     TripNo Codes[TOTAL_TRIPS] = {
@@ -675,7 +556,7 @@ tripFile_GetBusTrip(struct DateDMY *tripDate, struct Bus16 BusTrip[], struct dro
         } else {
             strcpy(tempPassenger.embarkationPoint, BusTrip[tripIndex].embarkationPoint);
             strcpy(tempPassenger.tripNumber, BusTrip[tripIndex].TripID);
-            tempPassenger.passengerName = GetNameFromString(temporaryBuffer[0]);
+            tempPassenger.passengerName = GetNameFieldFromString(temporaryBuffer[0]);
             tempPassenger.idNumber = atoi(temporaryBuffer[1]);
 
             for (i = 0; i < 3; i++) {
@@ -701,6 +582,12 @@ tripFile_GetBusTrip(struct DateDMY *tripDate, struct Bus16 BusTrip[], struct dro
     return 0;
 }
 
+/**
+ * @brief Writes the results of today's passenger to a .txt file.
+ * @param  *tripDate: 
+ * @param  BusTrip[]: 
+ * @return void
+ */
 void
 tripFile_WriteBusTrip(struct DateDMY *tripDate, struct Bus16 BusTrip[]){
     FILE *busTripFile;
@@ -749,46 +636,55 @@ tripCopy(struct Bus16 *Destination, struct Bus16 *Source){
 // |===| Trip Struct Functions |=============================|
 
 /**
- * @brief  
- * @note   
- * @param  *tripDate: 
- * @param  inputTrip: 
- * @param  TripInfo[]: 
- * @param  TripKey: 
+ * @brief Grabs the bus in a trip database based on the ID.
+ * @param inputTrip: the TripID of the bus needed.
+ * @param TripDatabase[]: an array of Bus16 struct of the trips needed to search into.
+ * @param TripKey: a pointer to a Bus16 struct to be filled with the wanted Bus Trip.
+ * @param *keyloc: the index of the wanted Bus16's location in TripDatabase. 
  * @return How many passengers are there in the inputted Trip.
  */
 int
-tripStruct_SearchBusTrip (TripNo inputTrip, struct Bus16 TripInfo[], struct Bus16 *TripKey, int *keyLoc){
+tripStruct_SearchBusTrip (TripNo inputTrip, struct Bus16 TripDatabase[], struct Bus16 *TripKey, int *keyLoc){
     int i;
     int isTripFound = FALSE;
     int key = 0;
     for(i = 0; i < TOTAL_TRIPS && !isTripFound; i++){
-        if(strcmp(TripInfo[i].TripID, inputTrip) == 0){
+        if(strcmp(TripDatabase[i].TripID, inputTrip) == 0){
             isTripFound = TRUE;
             key = i;
         }
     }
 
     if (isTripFound)
-        tripCopy(TripKey, &TripInfo[key]);
+        *TripKey = TripDatabase[key];
+        // tripCopy(, &TripInfo[key]);
 
     *keyLoc = key;
     
-    return TripInfo[key].volume;
+    return TripDatabase[key].volume;
 }
 
+/**
+ * @brief Finds passengers by last name and store them in a SearchResultField to be interpretted.
+ * @param BusTrip[]: a Bus16 struct that holds.
+ * @param *LastName: a string that points to the last name.
+ * @param *nameResults: a SearchResultField struct containing exits;
+ * @return returns the size of the tripStruct
+ */
 int
 tripStruct_ReturnLastname (struct Bus16 BusTrip[], char *LastName, struct SearchResultField *nameResults){
     FILE *pFileBusTrip;
-    String255 temporaryBuffer = "";
-    String255 strName = "";
-    String15 fileName = "";
+    String255 temporaryBuffer   = "";
+    String255 strName           = "";
+    String15 fileName           = "";
     struct NameField nameBuffer;
     int hasFullSearches = FALSE;
-    int nMatchedNames = 0;
     int i;
     int j;
-    // File Handling
+
+    nameResults->size = 0;
+
+    // Search Result
     for (i = 0; i < TOTAL_TRIPS && !hasFullSearches; i++){
         for(j = 0; j < 16 && !hasFullSearches; j++){
             nameBuffer = BusTrip[i].Passengers[j].passengerName;
@@ -796,30 +692,28 @@ tripStruct_ReturnLastname (struct Bus16 BusTrip[], char *LastName, struct Search
             removeNewline(nameBuffer.lastName);
 
             if (isSubString(LastName, nameBuffer.lastName)){
-                strcpy(nameResults->result[nMatchedNames], strName);
-                nameResults->passengerIndex[nMatchedNames] = j;
-                nameResults->tripNumber[nMatchedNames] = i;
-                nMatchedNames++;
+                strcpy(nameResults->result[nameResults->size], strName);
+                nameResults->passengerIndex[nameResults->size] = j;
+                nameResults->tripNumber[nameResults->size] = i;
+                nameResults->size++;
             }
 
-            if (nMatchedNames == BUS_SIZE)
+            if (nameResults->size == BUS_SIZE)
                 hasFullSearches = TRUE;
         }
     }
-
-    return nMatchedNames;
+    return nameResults->size;
 }
 
 // |===| Copy functions |====================================|
 
 /**
- * @brief  
- * @note   
- * @param *input: 
- * @retval None
+ * @brief Initializes dropOffs structs to the required values.
+ * @param *input: an array of dropOffPointList structs needed to be initialized with values.
+ * @return none
  */
 void 
-initializeDropOffPointList (struct dropOffPointList *input){
+initializeDropOffPointList (struct dropOffPointList input[]){
     String15 strExitRoutes[4] = {
         "Mamplasan Exit",
         "ETON Exit",
@@ -859,14 +753,22 @@ initializeDropOffPointList (struct dropOffPointList *input){
     }
 }
 
+/**
+ * @brief A password checker that sees if the given input is equal to the admin password. 
+ * @note This is only meant to prevent unauthorized access, and not meant to be cybersecure.
+ * @param *isChoosingAdminCmds: boolean condition of the subsequent loop. If true, the user has full access to the mode.
+ * @param *isInputingPass: boolean condition of the inner while loop. If false, the password loop ends
+ * @param *realPass: String of the real password.
+ * @retval None
+ */
 void 
-passwordMenu (int *isChoosingAdminCmds, int *isInputingPass, char *realPass){
+passwordChecker (int *isChoosingAdminCmds, int *isInputingPass, char *realPass){
     String127 inputPass;
-    String63 errorMessage = "Error, not a string.";
-    String15 graphicCode = "PassMenu";
-    String15 prompt = "\t> Password: ";
-    String31 strWrongPass = "Wrong Input. Try again.";
-
+    String63 errorMessage   = "Error, not a string.";
+    String31 strWrongPass   = "Wrong Input. Try again.";
+    String15 graphicCode    = "PassMenu";
+    String15 prompt         = "\t> Password: ";
+    
     repeatGetString(inputPass, 127, graphicCode, prompt, errorMessage);
     printf("\n");
 
@@ -880,8 +782,15 @@ passwordMenu (int *isChoosingAdminCmds, int *isInputingPass, char *realPass){
     }
 }
 
+/**
+ * @brief Initializes Bus Trips 
+ * @param Triplist[]: An array of Bus16 struct of the trips needed to fill up
+ * @param *date: A DateDMY struct of a date
+ * @param isStartingFromFile: Boolean for the developers need to start from a txt file quickly
+ * @param exits[]: points to a dropOffPointList struct 
+ * */
 void
-initializeBusTrip (struct Bus16 Triplist[], int size, struct DateDMY *date, int isStartingFromFile, struct dropOffPointList *exits){
+initializeBusTrip (struct Bus16 Triplist[], struct DateDMY *date, int isStartingFromFile, struct dropOffPointList *exits){
     TripNo Codes[TOTAL_TRIPS] = {
         "AE101", "AE102", "AE103", "AE104", "AE105",
         "AE106", "AE107", "AE108", "AE109", 
@@ -895,7 +804,8 @@ initializeBusTrip (struct Bus16 Triplist[], int size, struct DateDMY *date, int 
     int i;
     int j;
 
-    for(i = 0; i < TOTAL_TRIPS; i++){
+    // Initializes every with clear values
+    for(i = 0; i < TOTAL_TRIPS; i++) {
         strcpy(Triplist[i].TripID, "--000");
         Triplist[i].volume = 0;
         Triplist[i].timeOfTrip.hour = 0;
@@ -912,13 +822,13 @@ initializeBusTrip (struct Bus16 Triplist[], int size, struct DateDMY *date, int 
         }
     }
 
-    
-    
+    // Fills them up back with required values.
     for(i = 0; i < TOTAL_TRIPS; i++){
         strcpy(Triplist[i].TripID, Codes[i]);
         findTimeOfTripNo(Triplist[i].TripID, strTime);
         Triplist[i].timeOfTrip = TimeHMfromString(strTime);
-        
+        Triplist[i].volume = 0;
+
         if (i < 9 || i == 20)
             strcpy(Triplist[i].embarkationPoint, "DLSU Manila Campus - South Gate Driveway");
         else if (i < 20 || i == 21)
@@ -932,8 +842,6 @@ initializeBusTrip (struct Bus16 Triplist[], int size, struct DateDMY *date, int 
             strcpy(Triplist[i].route, "Estrada");
         else if (i < 20 && i % 2 == 1)
             strcpy(Triplist[i].route, "Buendia/LRT");
-
-        Triplist[i].volume = 0;
     }
 
     if (isStartingFromFile) {
@@ -942,6 +850,11 @@ initializeBusTrip (struct Bus16 Triplist[], int size, struct DateDMY *date, int 
     } 
 }
 
+/**
+ * @brief Clears garbage values of DropOffResult.
+ * @param *DropOffResults: a SearchResultField struct to initialize starting zereos
+ * @return void
+ */
 void
 initializeSearchResult (struct SearchResultField *DropOffResults){
     int i;
@@ -953,41 +866,47 @@ initializeSearchResult (struct SearchResultField *DropOffResults){
     DropOffResults->size = 0;
 }
 
+/**
+ * @brief Counts the frequency of people on a Drop-off.
+ * @param BusTrip a pointer Bus16 struct
+ * @return a SearchResultField struct
+ */
 struct SearchResultField
-countWordFrequency (struct Bus16 BusTrip, int returnedPassengers){
+countDropOffFrequency (struct Bus16 BusTrip[]){
     struct SearchResultField DropOffResults;
-    String255 strTemp;
+    String255 strTemp = "";
     int foundSameDropOff = FALSE;;
     int nPass;
-    int nResult;
+    int nRslt;
     int max;
     int nTemp;
     int i;
     int j;
 
     initializeSearchResult(&DropOffResults);
-    strcpy(DropOffResults.result[0], BusTrip.Passengers[0].dropOffPoint);
-
+    // Set-up
+    strcpy(DropOffResults.result[0], BusTrip->Passengers[0].dropOffPoint);
     DropOffResults.passengerIndex[0] = 1;
     DropOffResults.size++;
-
-    for (nPass = 1; nPass < returnedPassengers; nPass++){
+    // For every passenger
+    for (nPass = 1; nPass < BusTrip->volume; nPass++){
         foundSameDropOff = FALSE;  
-
-        for (nResult = 0; nResult < DropOffResults.size && !foundSameDropOff; nResult++){
+        // Check results
+        for (nRslt = 0; nRslt < DropOffResults.size && !foundSameDropOff; nRslt++){
             // is ALREADY ENCOUNTERED?
-            if (strcmp(DropOffResults.result[nResult], BusTrip.Passengers[nPass].dropOffPoint) == 0){
+            if (strcmp(DropOffResults.result[nRslt], BusTrip->Passengers[nPass].dropOffPoint) == 0){
                 foundSameDropOff = TRUE;
-                DropOffResults.passengerIndex[nResult] += 1;
+                DropOffResults.passengerIndex[nRslt] += 1;
             }
         }
-
+        // Add new category
         if (!foundSameDropOff) {
-            strcpy(DropOffResults.result[DropOffResults.size], BusTrip.Passengers[nPass].dropOffPoint);
+            strcpy(DropOffResults.result[DropOffResults.size], BusTrip->Passengers[nPass].dropOffPoint);
             DropOffResults.passengerIndex[DropOffResults.size] = 1;
             DropOffResults.size++;
         }
     }
+
     // SORTING ALGORITHM for Search Results
     for(i = 0; i < DropOffResults.size - 1; i++){
         max = i;
@@ -998,21 +917,23 @@ countWordFrequency (struct Bus16 BusTrip, int returnedPassengers){
                 max = j;
         }
         // SWAP CODE
-        if (max != j){
-            strcpy(strTemp, DropOffResults.result[i]);
-            strcpy(DropOffResults.result[i], DropOffResults.result[max]);
-            strcpy(DropOffResults.result[max], strTemp);
-
-            nTemp = DropOffResults.passengerIndex[i];
-            DropOffResults.passengerIndex[i] = DropOffResults.passengerIndex[max];
-            DropOffResults.passengerIndex[max] = nTemp;
+        if (max != j) {
+            swapStr(DropOffResults.result[i], DropOffResults.result[max]);
+            swapInt(DropOffResults.passengerIndex + i, DropOffResults.passengerIndex + max);
         }
     }
     return DropOffResults;
 }
 
+/**
+ * @brief Promts the user for passenger information. If the given is information is not correct, send error and repromt again.
+ * @param *pInput: a pointer to a Passenger struct
+ * @param TripDatabase[]: an array to a Bus16 struct
+ * @param *exits: an array of dropOffPointList struct
+ * @return void 
+ */
 void
-repeatGetPassenger(struct Passenger *pInput, struct Bus16 TripDatabase[], struct dropOffPointList *exits){
+repeatGetPassenger(struct Passenger *pInput, struct Bus16 TripDatabase[], struct dropOffPointList exits[]){
     String63 validationErrorMessage = "Please enter either Y or N only.";
     struct Passenger holder;
     String15 Route = "";

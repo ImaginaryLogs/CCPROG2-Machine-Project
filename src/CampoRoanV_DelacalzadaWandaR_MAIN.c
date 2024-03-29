@@ -1,11 +1,7 @@
 
 #include "CampoRoanV_DelacalzadaWandaR_Functions.h"
 
-/**
- *
- * TODO Fill it functions accessible to a general user based on the diagram.
- * 
- */
+
 int 
 main() {
     struct dropOffPointList exits[4];
@@ -17,7 +13,7 @@ main() {
     printGraphics("BusExpress");
     repeatGetDateDMY(&dateNow);
     initializeDropOffPointList(exits);
-    initializeBusTrip(Triplist, TOTAL_TRIPS, &dateNow, TRUE, exits);
+    initializeBusTrip(Triplist, &dateNow, TRUE, exits);
 
     do {
         printGraphics("BusExpress");
@@ -30,7 +26,7 @@ main() {
         switch (mainInput) {
             case 'A':
             case 'a':
-                menuAdmin(Triplist, TOTAL_TRIPS, &dateNow, exits);
+                menuAdmin(Triplist, &dateNow, exits);
                 break;
             case 'B':
             case 'b':
