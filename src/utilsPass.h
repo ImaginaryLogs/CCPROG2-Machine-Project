@@ -1,7 +1,13 @@
 #include"utilsBase.h"
 
+/**
+ * @brief Finds the embarkation code equivalent
+ * @param *embarkationPoint: String of the embarkationPoint needed to be analyzed.
+ * @param *outputCode: String buffer of the wanted embarkation code
+ * @return
+ */
 void
-embarkationCodeEquivalent(char * embarkationPoint, char *outputCode){
+embarkationCodeEquivalent(char *embarkationPoint, char *outputCode){
     if (strcmp(embarkationPoint, "DLSU Manila Campus - South Gate Driveway") == 0){
         strcpy(outputCode, "MNL-LAG");
     } else {
@@ -190,6 +196,11 @@ printSearchResults (struct SearchResultField *lastNameResults, struct Bus16 BusT
     }
 }
 
+/**
+ * @brief Prints the trip information.
+ * @param Trips[]: an array of Bus16 structs that contains trip information and acts like the Database.
+ * @return void
+ */
 void 
 printTrips (struct Bus16 Trips[]){
     String15 stringEmbarkCode = "";
@@ -232,6 +243,11 @@ printTrips (struct Bus16 Trips[]){
     printGraphics("PassEmbark2");
 }
 
+/**
+ * @brief Print the results of a SearchResultField struct in an organized manner.
+ * @param *DropOffResults: a SearchResultField struct
+ * @return void
+ */
 void
 printDropOffs (struct SearchResultField *DropOffResults){
     int i;
@@ -244,6 +260,11 @@ printDropOffs (struct SearchResultField *DropOffResults){
     printf("|  A--- END\n");
 }
 
+/**
+ * @brief Prints people in a size 13 Bus.
+ * @param passCount: How many passengers there are. 
+ * @return void
+ */
 void 
 printSeats13(int passCount) {  
     char seats13[5][3];
@@ -306,6 +327,11 @@ printSeats13(int passCount) {
         repeatGetInteger(&passCount, "None", "Please Enter a seat", "Error, not a Integer");
 }
 
+/**
+ * @brief Prints people in a size 16 Bus.
+ * @param passCount: How many passengers there are. 
+ * @return void
+ */
 void 
 printSeats16(int passCount) { 
     char seats16[4][4];
@@ -368,113 +394,36 @@ printSeats16(int passCount) {
 }
 
 
-int
-containsDropOffPointList (struct dropOffPointList *input, char *dropOff){
-    int i;
-    for(i = 0; i < input->size; i++){
-        if (strcmp(dropOff, input->dropOffs[i]) == 0)
-            return TRUE;
-    }
-    return FALSE;
-}
-
-
 // |===| Trip File Functions |=============================|
 
-int
-tripFile_ReturnLastname (struct DateDMY *tripDate, struct Bus16 BusTrip, char *LastName, struct SearchResultField *nameResults){
-    FILE *pFileBusTrip;
-    String255 temporaryBuffer = "";
-    String255 strName = "";
-    String15 fileName = "";
-    struct NameField nameBuffer;
-    int isFileDoesNotExist = FALSE;
-    int hasFullSearches = FALSE;
-    int hasNotFoundEOF = TRUE;
-    int nMatchedNames = 0;
-    int linesSearched = 0; 
-    int linesIgnored = 0;
-    // File Handling
-    StringfromDateDMY(fileName, tripDate, TRUE);
-    pFileBusTrip = fopen(fileName, "r");
-    isFileDoesNotExist = pFileBusTrip == NULL;
-    if (isFileDoesNotExist) {   
-        fclose(pFileBusTrip);
-        printErrorMessage("ERROR DOES NOT EXIST");
-        return EROR_FILE_NOT_FOUND;
-    }
-
-    fgets(temporaryBuffer, 255, pFileBusTrip);
-    fgets(temporaryBuffer, 255, pFileBusTrip);
-
-    while (hasNotFoundEOF && !hasFullSearches){
-        if (fgets(strName, 255, pFileBusTrip) == NULL) {
-            fclose(pFileBusTrip);
-            return nMatchedNames;
-        }
-
-        removeNewline(strName);
-        nameBuffer = GetNameFieldFromString(strName);
-
-        if (isSubString(LastName, nameBuffer.lastName)){
-            printf("%s\n",strName);
-            strcpy(nameResults->result[nMatchedNames], strName);
-            nameResults->passengerIndex[nMatchedNames] = linesSearched;
-            nMatchedNames++;
-        }
-
-        if (nMatchedNames == BUS_SIZE)
-            hasFullSearches = TRUE;
-
-        // Other information is ignored
-        for(linesIgnored = 0; linesIgnored < 6 && hasNotFoundEOF; linesIgnored++)
-            if (fgets(temporaryBuffer, 255, pFileBusTrip) == NULL) {
-                fclose(pFileBusTrip);
-                return nMatchedNames;
-            }
-            
-        linesSearched++;
-    }
-    fclose(pFileBusTrip);
-    return nMatchedNames;
-}
-
 /**
- * @brief  
- * @param *tripDate Date Struct of the Trip.
- * @param inputTrip A String of the Trip Number used to identify the trip. 
- * @param BusTrip A struct Bus16 pointer to the array of Bustrips.
- * @return Number of passengers in the trip.
- */
-
-
-/**
- * @brief  
- * @note   
- * @param  *inputTripNo: 
- * @retval 
+ * @brief Searches the index of a Trip.
+ * @param *inputTripNo: string of the Trip you want to find the index of.
+ * @param TripDatabase[]: a Bus16 struct array to find the tripNo. in
+ * @return Integer whether it is found or not
+ * @retval 0+ index in the struct Bus16 TripDatabase array
+ * @retval -1 if not found.
  */
 int
-findIndexOfTripNo(char *inputTripNo){
-    TripNo Codes[TOTAL_TRIPS] = {
-        "AE101", "AE102", "AE103", "AE104", "AE105",
-        "AE106", "AE107", "AE108", "AE109", 
-        "AE150", "AE151", "AE152", "AE153", "AE154", 
-        "AE155", "AE156", "AE157", "AE158", "AE159", "AE160", 
-        "SP101", "SP102"
-    };
+searchIndexOfTripNo(char *inputTripNo, struct Bus16 TripDatabase[]){
     int i;
-
     for (i = 0; i < TOTAL_TRIPS; i++) {
-        if (strcmp(Codes[i], inputTripNo) == 0) {
+        if (strcmp(TripDatabase[i].TripID, inputTripNo) == 0) {
             return i;
         }
     }
     return -1;
 }
 
+/**
+ * @brief Finds the corresponding String of the Time of Estimated Departure the Trip
+ * @param *inputTripNo: String to the trip you want to find
+ * @param *strOutputTime: String buffer of the output trip
+ * @retval TRUE if found
+ * @retval FALSE if not found
+ */
 ErrorInt
-findTimeOfTripNo(char *inputTripNo, char *strOutputTime){
+findStringTimeOfTripNo(char *inputTripNo, char *strOutputTime){
     TripNo Codes[TOTAL_TRIPS] = {
         "AE101", "AE102", "AE103", "AE104", "AE105",
         "AE106", "AE107", "AE108", "AE109", 
@@ -503,8 +452,16 @@ findTimeOfTripNo(char *inputTripNo, char *strOutputTime){
     return EROR_KEY_NOT_FOUND;
 }
 
-/***/
-int
+/**
+ * @brief Reads contents of a .txt file and updates the memory
+ * @note   
+ * @param *tripDate: 
+ * @param BusTrip[]: struct Bus16
+ * @param *exits: 
+ * @retval -2 if File Error
+ * @retval 0 if Success
+ */
+ErrorInt
 tripFile_GetBusTrip(struct DateDMY *tripDate, struct Bus16 BusTrip[], struct dropOffPointList *exits){
     struct Passenger    tempPassenger;
     struct TimeHM       tempTime;
@@ -546,8 +503,8 @@ tripFile_GetBusTrip(struct DateDMY *tripDate, struct Bus16 BusTrip[], struct dro
     while (!feof(pFileBusTrip)) {
         // Check if its a new Trip
         if (isStringTripNo(temporaryBuffer[0])) {
-            tripIndex = findIndexOfTripNo(temporaryBuffer[0]);
-            findTimeOfTripNo(temporaryBuffer[0], timeOfTrip);
+            tripIndex = searchIndexOfTripNo(temporaryBuffer[0], BusTrip);
+            findStringTimeOfTripNo(temporaryBuffer[0], timeOfTrip);
             strcpy(BusTrip[tripIndex].TripID, temporaryBuffer[0]);
             strcpy(BusTrip[tripIndex].embarkationPoint, temporaryBuffer[1]);
             BusTrip[tripIndex].timeOfTrip = TimeHMfromString(timeOfTrip);
@@ -579,17 +536,17 @@ tripFile_GetBusTrip(struct DateDMY *tripDate, struct Bus16 BusTrip[], struct dro
     }
 
     fclose(pFileBusTrip);
-    return 0;
+    return PROG_SUCCESS;
 }
 
 /**
  * @brief Writes the results of today's passenger to a .txt file.
- * @param  *tripDate: 
- * @param  BusTrip[]: 
+ * @param *tripDate: the date today in struct DateDMY
+ * @param TripDatabase[]: an array of Bus16 struct of the trips needed to search into.
  * @return void
  */
 void
-tripFile_WriteBusTrip(struct DateDMY *tripDate, struct Bus16 BusTrip[]){
+tripFile_WriteBusTrip(struct DateDMY *tripDate, struct Bus16 TripDatabase[]){
     FILE *busTripFile;
     String15 fileName = "";
     String127 passengerName = "";
@@ -605,15 +562,15 @@ tripFile_WriteBusTrip(struct DateDMY *tripDate, struct Bus16 BusTrip[]){
     }
 
     for(i = 0; i < TOTAL_TRIPS; i++){
-        if (BusTrip[i].volume > 0) {
-            fprintf(busTripFile, "%s\n", BusTrip[i].TripID);
-            fprintf(busTripFile, "%s\n", BusTrip[i].embarkationPoint);
-            for (j = 0; j < BusTrip[i].volume; j++){
-                GetStringFromNameField(passengerName, BusTrip[i].Passengers[j].passengerName);
+        if (TripDatabase[i].volume > 0) {
+            fprintf(busTripFile, "%s\n", TripDatabase[i].TripID);
+            fprintf(busTripFile, "%s\n", TripDatabase[i].embarkationPoint);
+            for (j = 0; j < TripDatabase[i].volume; j++){
+                GetStringFromNameField(passengerName, TripDatabase[i].Passengers[j].passengerName);
                 fprintf(busTripFile, "%s\n", passengerName);
-                fprintf(busTripFile, "%d\n", BusTrip[i].Passengers[j].idNumber);
-                fprintf(busTripFile, "%d\n", BusTrip[i].Passengers[j].priorityNumber);
-                fprintf(busTripFile, "%s\n\n", BusTrip[i].Passengers[j].dropOffPoint);
+                fprintf(busTripFile, "%d\n", TripDatabase[i].Passengers[j].idNumber);
+                fprintf(busTripFile, "%d\n", TripDatabase[i].Passengers[j].priorityNumber);
+                fprintf(busTripFile, "%s\n\n", TripDatabase[i].Passengers[j].dropOffPoint);
             }
         }
     }
@@ -621,20 +578,8 @@ tripFile_WriteBusTrip(struct DateDMY *tripDate, struct Bus16 BusTrip[]){
     fclose(busTripFile);
 }
 
-void
-tripCopy(struct Bus16 *Destination, struct Bus16 *Source){
-    int i;
-    for(i = 0; i < 16; i++)
-        Destination->Passengers[i] = Source->Passengers[i];
-
-    strcpy(Destination->TripID, Source->TripID);
-    Destination->timeOfTrip = Source->timeOfTrip;
-    Destination->volume = Source->volume;
-}
-
 
 // |===| Trip Struct Functions |=============================|
-
 /**
  * @brief Grabs the bus in a trip database based on the ID.
  * @param inputTrip: the TripID of the bus needed.
@@ -657,7 +602,6 @@ tripStruct_SearchBusTrip (TripNo inputTrip, struct Bus16 TripDatabase[], struct 
 
     if (isTripFound)
         *TripKey = TripDatabase[key];
-        // tripCopy(, &TripInfo[key]);
 
     *keyLoc = key;
     
@@ -825,7 +769,7 @@ initializeBusTrip (struct Bus16 Triplist[], struct DateDMY *date, int isStarting
     // Fills them up back with required values.
     for(i = 0; i < TOTAL_TRIPS; i++){
         strcpy(Triplist[i].TripID, Codes[i]);
-        findTimeOfTripNo(Triplist[i].TripID, strTime);
+        findStringTimeOfTripNo(Triplist[i].TripID, strTime);
         Triplist[i].timeOfTrip = TimeHMfromString(strTime);
         Triplist[i].volume = 0;
 

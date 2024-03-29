@@ -46,3 +46,14 @@ main() {
     } while (mainInput != 'c');
     return 0;
 }
+
+/********************************************************************************************************* 
+ * This is to certify that this project is our own work, based on our personal efforts in studying and 
+ * applying the concepts learned. We have constructed the functions and their respective algorithms and 
+ * corresponding code by ourselves. The program was run, tested, and debugged by our own efforts. 
+ * 
+ * We further certify that we have not copied in part or whole or otherwise plagiarized the work of 
+ * other students and/or persons. 
+ *                                                      ROAN CEDRIC V. CAMPO,           DLSU ID# 12305936
+ *                                                      WANDA JUDE R. DE LA CALZADA,    DLSU ID# 12305669
+*********************************************************************************************************/
