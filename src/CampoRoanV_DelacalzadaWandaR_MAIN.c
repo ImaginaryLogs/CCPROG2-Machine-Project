@@ -2,11 +2,11 @@
 #include "CampoRoanV_DelacalzadaWandaR_Functions.h"
 
 
+
 int 
 main() {
     struct dropOffPointList exits[4];
     struct Bus16            Triplist[TOTAL_TRIPS];
-    struct TimeHM           timeNow;
     struct DateDMY          dateNow;
     char mainInput;
 

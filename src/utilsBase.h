@@ -117,9 +117,11 @@ clearInput(){
 void
 swapInt(int *nDEST, int *nSRCE){
     int temp;
+    printf("1");
     temp = *nSRCE;
     *nSRCE = *nDEST;
     *nDEST = temp;
+    printf("2");
 }
 
 /**
@@ -132,9 +134,11 @@ swapInt(int *nDEST, int *nSRCE){
 void
 swapStr(char *nDEST, char *nSRCE){
     String255 temp = "";
+    printf("3");
     strcpy(temp, nDEST);
     strcpy(nDEST, nSRCE);
     strcpy(nSRCE, temp);
+    printf("4");
 }
 
 /**
@@ -517,7 +521,7 @@ GetNameFieldFromString(char *strName){
     int firstNameCeil   = 0;
     int firstNameFlor   = 0;
 
-    for(charIndex = 0; charIndex < strlen(strName) ; charIndex++){
+    for(charIndex = 0; charIndex < (int) strlen(strName) ; charIndex++){
         // Ceiling of last name section
         hasSeenFirstName = strName[charIndex] == ','; 
         // Ceiling of middle initial
@@ -526,7 +530,7 @@ GetNameFieldFromString(char *strName){
          * Remember that the index starts at 0. So the index's ranges from 0 to strlen - 1, 
          * so Offset by 1 to make it from 1 to strlen.
         */
-        hasNoMiddleInitial = charIndex + 1 == strlen(strName) && 
+        hasNoMiddleInitial = charIndex + 1 == (int) strlen(strName) && 
                              strName[charIndex] != '.'; 
             
         if (hasSeenFirstName) {
@@ -562,7 +566,7 @@ isStringTripNo(char *inputString){
     int isSecondNumber      = TRUE;
     int i = 0;
     
-    if (strlen(inputString) > 6 || strlen(inputString) < 5 || inputString[5] != '\n' && inputString[5] != '\0')
+    if (strlen(inputString) > 6 || strlen(inputString) < 5 || (inputString[5] != '\n' && inputString[5] != '\0'))
         return isTripNo;
     
     copySubstringFromString(tripCodePart, inputString, 0, 2);
@@ -704,9 +708,12 @@ repeatGetChar(char *pInput, char choiceMenuGraphicsCode[], char promtMessage[], 
  * @param *validationErrorMessage: error if the choice is not in the given
  */
 void
-validateUserInput(int *isChoiceCertain, int *isChoiceValidByUser, char * validationErrorMessage){
+validateUserInput(int *isChoiceCertain, int *isChoiceValidByUser, char *validationErrorMessage){
+	String15 strGraphics 			= "None";
+	String15 strPrompt 				= "\t> [Y/N]: ";
+	String31 strConfirmationError 	= "Enter a valid char.";
     char userValidation;
-    repeatGetChar(&userValidation, "None", "\t> [Y/N]: ", "Enter a valid char.");
+    repeatGetChar(&userValidation, strGraphics, strPrompt, strConfirmationError);
     switch(userValidation){
         case 'Y':
         case 'y':
@@ -730,7 +737,11 @@ repeatGetDateDMY(struct DateDMY *pInput){
     // Error Messages
     String63 typeErrMessage     = "Please input the correct format.";
     String63 validErrMessage    = "Please enter either Y or N only.";
-
+    String63 promptYear 		= "Enter a recent year after 2000.";
+	String63 promptMonth		= "Enter a valid month.";
+	String63 promptDay			= "Enter a valid day.";
+	String15 graphicCode 		= "EnterDate";
+	
     // Boolean Conditions
     int isFindingDate   = TRUE;
     int isValidDay      = FALSE;
@@ -742,11 +753,10 @@ repeatGetDateDMY(struct DateDMY *pInput){
     int returnedInputs      = 0;
 
     // User inputs
-    char userValidation; 
     char closingChar;
 
     while (isFindingDate) {
-        printGraphics("EnterDate");
+        printGraphics(graphicCode);
 
         successfulInputs = 0;
         while (successfulInputs < 3) {
@@ -756,7 +766,7 @@ repeatGetDateDMY(struct DateDMY *pInput){
                     returnedInputs = scanf("%d%c", &pInput->year, &closingChar);
 
                     if (pInput->year < 2000) 
-                        printErrorMessage("Enter a recent year after 2000.");
+                        printErrorMessage(promptYear);
                     isValidYear = pInput->year >= 2000;
                     successfulInputs += isInputSuccesful(returnedInputs, closingChar, typeErrMessage) &&
                                         isValidYear;
@@ -767,7 +777,7 @@ repeatGetDateDMY(struct DateDMY *pInput){
                     isValidMonth = pInput->month >= 1 && pInput->month < 13;
 
                     if (!isValidMonth) 
-                        printErrorMessage("Enter a valid month.");
+                        printErrorMessage(promptMonth);
 
                     successfulInputs += isInputSuccesful(returnedInputs, closingChar, typeErrMessage) &&
                                         isValidMonth;
@@ -778,7 +788,7 @@ repeatGetDateDMY(struct DateDMY *pInput){
                     isValidDay = checkValidDate(pInput->year, pInput->month, pInput->day);
 
                     if (!isValidDay) 
-                        printErrorMessage("Enter a valid day.");
+                        printErrorMessage(promptDay);
 
                     successfulInputs += isInputSuccesful(returnedInputs, closingChar, typeErrMessage) &&
                                         isValidDay;
@@ -814,7 +824,6 @@ repeatGetTripNo(char *pInput, char choiceMenuGraphicsCode[], char *promtMessage,
     
     int isWithinRange   = FALSE;
     int isValidTripCode = FALSE;
-    int typeReturned    = 0;
     int TripNumber      = 0;
 
     do {
@@ -838,13 +847,4 @@ repeatGetTripNo(char *pInput, char choiceMenuGraphicsCode[], char *promtMessage,
     } while(!isValidTripCode);
 }
 
-/********************************************************************************************************* 
- * This is to certify that this project is our own work, based on our personal efforts in studying and 
- * applying the concepts learned. We have constructed the functions and their respective algorithms and 
- * corresponding code by ourselves. The program was run, tested, and debugged by our own efforts. 
- * 
- * We further certify that we have not copied in part or whole or otherwise plagiarized the work of 
- * other students and/or persons. 
- *                                                      ROAN CEDRIC V. CAMPO,           DLSU ID# 12305936
- *                                                      WANDA JUDE R. DE LA CALZADA,    DLSU ID# 12305669
-*********************************************************************************************************/
+

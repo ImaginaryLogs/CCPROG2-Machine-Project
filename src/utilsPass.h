@@ -66,6 +66,7 @@ printBus16 (struct Bus16 Trip){
  */
 void
 printListofPassenger(TripNo inputTripNumber, struct Bus16 *BusTrip){
+	String31 NoFileErrMessage = "Trip not yet created.\n";
     HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     struct Bus16        sortedBusTrip;
     struct Passenger    tempHolder;
@@ -77,7 +78,7 @@ printListofPassenger(TripNo inputTripNumber, struct Bus16 *BusTrip){
 
     sortedBusTrip = *BusTrip;
     if (BusTrip->volume > 0) {
-        printErrorMessage("Trip not yet created.\n");
+        printErrorMessage(NoFileErrMessage);
         return;
     }
 
@@ -146,6 +147,12 @@ printListofPassenger(TripNo inputTripNumber, struct Bus16 *BusTrip){
  */
 void
 printSearchResults (struct SearchResultField *lastNameResults, struct Bus16 BusTrip[], char *nameToSearch){
+	String15 graphicsCode1 	= "SearchResult1";
+	String15 graphicsCode2 	= "SearchResult2";
+	String15 graphicsCode3 	= "SearchResult3";
+	String15 promptMessage 	= "\t> Choice: ";
+	String15 errorMessage1	= "Not a number.";
+	String31 errorMessage2 	= "Search number is invalid.";
     struct Passenger ResultingPassenger;
     int isQuitingSearch         = FALSE;
     int hasChosenBeyondGiven    = FALSE;
@@ -166,14 +173,14 @@ printSearchResults (struct SearchResultField *lastNameResults, struct Bus16 BusT
     }
 
     while (lastNameResults->size > 0 && isSearching){
-        printGraphics("SearchResult1");
+        printGraphics(graphicsCode1);
 
         for(i = 0; i < lastNameResults->size; i++)
             printf("| %02d) Name: \"%s\"\n", i + 1, lastNameResults->result[i]);
 
-        printGraphics("SearchResult2");
+        printGraphics(graphicsCode2);
         
-        repeatGetInteger(&userChoice, "SearchResult3", "\t> Choice: ", "Not a number.");
+        repeatGetInteger(&userChoice, graphicsCode3, promptMessage, errorMessage1);
 
         isQuitingSearch = userChoice == -1;
         hasChosenBeyondGiven = userChoice > lastNameResults->size;
@@ -185,7 +192,7 @@ printSearchResults (struct SearchResultField *lastNameResults, struct Bus16 BusT
             system("cls");
         } else if (hasChosenBeyondGiven) {
             system("cls");
-            printErrorMessage("Search number is invalid.");
+            printErrorMessage(errorMessage2);
         } else if (hasChosenAResult) {
             tripResultIndex = lastNameResults->tripNumber[userChoice - 1];
             passResultIndex = lastNameResults->passengerIndex[userChoice - 1];
@@ -204,11 +211,12 @@ printSearchResults (struct SearchResultField *lastNameResults, struct Bus16 BusT
 void 
 printTrips (struct Bus16 Trips[]){
     String15 stringEmbarkCode = "";
+    String15 graphicsCode1 = "PassEmbark1";
+    String15 graphicsCode2 = "PassEmbark2";
     HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     int nColor = FG_WHITE;
     int i;
-    int j;
-    printGraphics("PassEmbark1");
+    printGraphics(graphicsCode1);
     for(i = 0; i < TOTAL_TRIPS; i++){
         
         if (Trips[i].volume > 10){
@@ -240,7 +248,7 @@ printTrips (struct Bus16 Trips[]){
         printf("%s\n", Trips[i].route);
         SetConsoleTextAttribute(hConsoleOutput, FG_WHITE | BG_BLACK);
     }
-    printGraphics("PassEmbark2");
+    printGraphics(graphicsCode2);
 }
 
 /**
@@ -250,8 +258,9 @@ printTrips (struct Bus16 Trips[]){
  */
 void
 printDropOffs (struct SearchResultField *DropOffResults){
+	String15 graphicsCode1 = "DropOff2";
     int i;
-    printGraphics("DropOff2");
+    printGraphics(graphicsCode1);
     printf("|  Y--- START\n|  |\n");
     for(i = 0; i < DropOffResults->size; i++) {
         printf("| %02d -- Drop Off: %s\n", i + 1, DropOffResults->result[i]);
@@ -266,7 +275,10 @@ printDropOffs (struct SearchResultField *DropOffResults){
  * @return void
  */
 void 
-printSeats13(int passCount) {  
+printSeats13(int passCount) {
+	String15 graphicsCode1 	= "None";
+	String31 promptMessage1 = "Please Enter a seat";
+	String31 errorMessage1	= "Error, not a Integer"; 
     char seats13[5][3];
     
     int i, j;
@@ -324,7 +336,7 @@ printSeats13(int passCount) {
         printf("|           |\n");
         printf("#-----------#\n");
     } else if (passCount != 0 || passCount > 13)
-        repeatGetInteger(&passCount, "None", "Please Enter a seat", "Error, not a Integer");
+        repeatGetInteger(&passCount, graphicsCode1, promptMessage1, errorMessage1);
 }
 
 /**
@@ -333,7 +345,10 @@ printSeats13(int passCount) {
  * @return void
  */
 void 
-printSeats16(int passCount) { 
+printSeats16(int passCount) {
+	String15 graphicsCode1 	= "None";
+	String31 promptMessage1 = "Please Enter a seat";
+	String31 errorMessage1	= "Error, not a Integer"; 
     char seats16[4][4];
     int i, j;
 
@@ -390,7 +405,7 @@ printSeats16(int passCount) {
         printf("#-----------#\n");
 
     } else if (passCount != 0 || passCount > 16)
-        repeatGetInteger(&passCount, "None", "Please Enter a seat", "Error, not a Integer");
+        repeatGetInteger(&passCount, graphicsCode1, promptMessage1, errorMessage1);
 }
 
 
@@ -454,32 +469,23 @@ findStringTimeOfTripNo(char *inputTripNo, char *strOutputTime){
 
 /**
  * @brief Reads contents of a .txt file and updates the memory
- * @note   
- * @param *tripDate: 
- * @param BusTrip[]: struct Bus16
- * @param *exits: 
+ * @param *tripDate: a DateDMY struct of trip Dates
+ * @param BusTrip[]: a struct Bus16 array of BusTrips
+ * @param *exits: a dropOffPointList struct array of exits
  * @retval -2 if File Error
  * @retval 0 if Success
  */
 ErrorInt
 tripFile_GetBusTrip(struct DateDMY *tripDate, struct Bus16 BusTrip[], struct dropOffPointList *exits){
+	String63 errorMessage1	= "Error: FILE DOES NOT EXIST. \ntripFile_GetBusTrip error."; 
     struct Passenger    tempPassenger;
-    struct TimeHM       tempTime;
     FILE *pFileBusTrip;
     String255 temporaryBuffer[3] = {""};
     String15 fileName   = "";
     String15 timeOfTrip = "";
 
     int isFileDoesNotExist      = FALSE;
-    int hasMatchedTrip          = FALSE;
-    int hasNotFoundEOF          = TRUE;
-    int ReadingState            = FALSE;
-    int hasBusPreviousBusTrip   = FALSE;
-
-    int nLineIgnored    = 0;
-    int nBusPassenger   = 0;
-    int nFoundDropOff   = 0;
-    int tripIndex       = 0;
+	int tripIndex = 0;
     int i;
 
     // File Handling
@@ -490,7 +496,7 @@ tripFile_GetBusTrip(struct DateDMY *tripDate, struct Bus16 BusTrip[], struct dro
 
     if (isFileDoesNotExist) {   
         fclose(pFileBusTrip);
-        printErrorMessage("tripFile_GetBusTrip2 FAIL.\n ERROR: FILE DOES NOT EXIST");
+        printErrorMessage(errorMessage1);
         return EROR_FILE_NOT_FOUND;
     }
 
@@ -547,6 +553,7 @@ tripFile_GetBusTrip(struct DateDMY *tripDate, struct Bus16 BusTrip[], struct dro
  */
 void
 tripFile_WriteBusTrip(struct DateDMY *tripDate, struct Bus16 TripDatabase[]){
+	String63 errMesFileError = "File writing error! \nCheck if filename is available to use.";
     FILE *busTripFile;
     String15 fileName = "";
     String127 passengerName = "";
@@ -557,7 +564,7 @@ tripFile_WriteBusTrip(struct DateDMY *tripDate, struct Bus16 TripDatabase[]){
     busTripFile = fopen(fileName, "w");
 
     if (busTripFile == NULL){
-        printErrorMessage("File writing error! Check if filename is available to use.");
+        printErrorMessage(errMesFileError);
         fclose(busTripFile);
     }
 
@@ -617,10 +624,7 @@ tripStruct_SearchBusTrip (TripNo inputTrip, struct Bus16 TripDatabase[], struct 
  */
 int
 tripStruct_ReturnLastname (struct Bus16 BusTrip[], char *LastName, struct SearchResultField *nameResults){
-    FILE *pFileBusTrip;
-    String255 temporaryBuffer   = "";
     String255 strName           = "";
-    String15 fileName           = "";
     struct NameField nameBuffer;
     int hasFullSearches = FALSE;
     int i;
@@ -744,7 +748,6 @@ initializeBusTrip (struct Bus16 Triplist[], struct DateDMY *date, int isStarting
     };
     
     String7 strTime = "";
-    int returnedPassengers = 0;
     int i;
     int j;
 
@@ -778,18 +781,18 @@ initializeBusTrip (struct Bus16 Triplist[], struct DateDMY *date, int isStarting
         else if (i < 20 || i == 21)
             strcpy(Triplist[i].embarkationPoint, "DLSU Laguna Campus - Milagros Del Rosario (MRR) Building - East Canopy");
     
-        if (i == 20 || i < 9 && i % 2 == 0)
+        if (i == 20 || (i < 9 && i % 2 == 0))
             strcpy(Triplist[i].route, "Mamplasan Exit");
         else if (i < 9 && i % 2 == 1)
             strcpy(Triplist[i].route, "ETON Exit");
-        else if (i == 21 || i < 20 && i % 2 == 0)
+        else if (i == 21 || (i < 20 && i % 2 == 0))
             strcpy(Triplist[i].route, "Estrada");
         else if (i < 20 && i % 2 == 1)
             strcpy(Triplist[i].route, "Buendia/LRT");
     }
 
     if (isStartingFromFile) {
-        returnedPassengers = tripFile_GetBusTrip(date, Triplist, exits);
+        tripFile_GetBusTrip(date, Triplist, exits);
         printBus16(*Triplist);
     } 
 }
@@ -818,12 +821,10 @@ initializeSearchResult (struct SearchResultField *DropOffResults){
 struct SearchResultField
 countDropOffFrequency (struct Bus16 BusTrip[]){
     struct SearchResultField DropOffResults;
-    String255 strTemp = "";
     int foundSameDropOff = FALSE;;
     int nPass;
     int nRslt;
     int max;
-    int nTemp;
     int i;
     int j;
 
@@ -879,17 +880,56 @@ countDropOffFrequency (struct Bus16 BusTrip[]){
 void
 repeatGetPassenger(struct Passenger *pInput, struct Bus16 TripDatabase[], struct dropOffPointList exits[]){
     String63 validationErrorMessage = "Please enter either Y or N only.";
+    String15 graphicCodes[12] = {
+		"PassEmbark3",
+		"PassEmbark4-1",
+		"PassEmbark4-2",
+		
+		"PassEmbark4-3",
+		"PassEmbark4-4",
+		"PassEmbark5",
+		
+		"PassEmbark6",
+		"PassEmbark7",
+		"PassEmbark8",
+		
+		"PassEmbark9"
+	};
+
+	String63 promptMessage[12] = {
+		"\t> Please Input Trip No: ",
+		"\t> First Name ",
+		"\t> Last Name ",	
+		"\t> Middle Initial ",
+		"\t> ID Number ",
+		"\t> Pass Ranking: ",
+		"\t> Embarkation Point: ",
+		"\t> DropOff Point: ",
+		"\t> Route: "
+	};
+	String63 errorMessage[13] = {
+		"Enter a valid one.",
+		"Please enter a valid last name within 64 characters.",
+		"Please enter a valid first name within 64 characters.",
+		"Please enter one valid character.",
+		"Please enter a valid integer.",
+		"Not a valid ID Number.",
+		"Not a valid priority number.",
+		"Please choose the number corresponding \nto where you are now.",
+		"Not a valid Embarkation selection.",
+		"Please choose the number corresponding to the route you want.",
+		"Not a valid Route selection.",
+		"Please choose which drop off you want.",
+		"Not a valid Drop Off selection."
+	};
     struct Passenger holder;
-    String15 Route = "";
     int embarkationNum;
     int routeNum;
     int isValidRanges;
     int dropOffNum;
     int isValidatingAll = TRUE;
     int isValidDetail[5] = {FALSE};
-    char userValidation;
     int isConfirmed = FALSE;
-    int temp;
 
     String255 strDropOffs[13] = {
         "1st drop-off point - Mamplasan Toll Exit", 
@@ -911,7 +951,7 @@ repeatGetPassenger(struct Passenger *pInput, struct Bus16 TripDatabase[], struct
         
         while (!isValidDetail[0]){
             printTrips(TripDatabase);
-            repeatGetTripNo(holder.tripNumber, "PassEmbark3", "\t> Please Input Trip No: ", "Enter a valid one.");
+            repeatGetTripNo(holder.tripNumber, graphicCodes[0], promptMessage[0], errorMessage[0]);
             system("cls");
             
             isConfirmed = FALSE;
@@ -923,16 +963,16 @@ repeatGetPassenger(struct Passenger *pInput, struct Bus16 TripDatabase[], struct
 
         while (!isValidDetail[1]){
             isConfirmed = FALSE;
-            repeatGetString(holder.passengerName.firstName, 63, "PassEmbark4-1", "\t> First Name ", "Please enter a valid last name within 64 characters.");
+            repeatGetString(holder.passengerName.firstName, 63, graphicCodes[1], promptMessage[1], errorMessage[1]);
             system("cls");
-            repeatGetString(holder.passengerName.lastName, 63, "PassEmbark4-2", "\t> Last Name ", "Please enter a valid first name within 64 characters.");
+            repeatGetString(holder.passengerName.lastName, 63, graphicCodes[2], promptMessage[2], errorMessage[2]);
             system("cls");
-            repeatGetChar(&holder.passengerName.midI, "PassEmbark4-3", "\t> Middle Initial ", "Please enter one valid character.");
+            repeatGetChar(&holder.passengerName.midI, graphicCodes[3], promptMessage[3], errorMessage[3]);
             system("cls");
 
             
             while (!isConfirmed) {
-                printGraphics("PassEmbark4-4");
+                printGraphics(graphicCodes[4]); // 4 - - // 4 3 3
                 printf("Is %s, %s %c. correct?\n", holder.passengerName.lastName, holder.passengerName.firstName, holder.passengerName.midI);
                 validateUserInput(&isConfirmed, &isValidDetail[1], validationErrorMessage);
             }
@@ -940,15 +980,15 @@ repeatGetPassenger(struct Passenger *pInput, struct Bus16 TripDatabase[], struct
 
         while (!isValidDetail[2]){
             isConfirmed = FALSE;
-            repeatGetInteger(&holder.idNumber, "PassEmbark5", "\t> Pass Ranking: ", "Please enter a valid integer.");
+            repeatGetInteger(&holder.idNumber, graphicCodes[5], promptMessage[4], errorMessage[4]); // 5 4 4 
             system("cls");
             
             if (holder.idNumber <= 0){
-                printErrorMessage("Not a valid ID Number.");
+                printErrorMessage(errorMessage[5]); // - - 5 // 5 4 5
             }
             
             while (!isConfirmed && holder.idNumber > 0) {
-                printGraphics("PassEmbark5");
+                printGraphics(graphicCodes[5]); // 5 - - // 5 4 5
                 printf("Is %d correct?\n", holder.idNumber);
                 validateUserInput(&isConfirmed, &isValidDetail[2], validationErrorMessage);
             }
@@ -956,14 +996,14 @@ repeatGetPassenger(struct Passenger *pInput, struct Bus16 TripDatabase[], struct
 
         while (!isValidDetail[3]){
             isConfirmed = FALSE;
-            repeatGetInteger(&holder.priorityNumber, "PassEmbark6", "\t> Pass Ranking: ", "Please enter a valid integer.");
+            repeatGetInteger(&holder.priorityNumber, graphicCodes[6], promptMessage[5], errorMessage[6]); // 6 5 6
             system("cls");
             if (holder.priorityNumber <= 0 && holder.priorityNumber > 6){
-                printErrorMessage("Not a valid priority number.");
+                printErrorMessage(errorMessage[7]); // - - 7 // 6 5 7
             }
  
             while (!isConfirmed && holder.priorityNumber > 0 && holder.priorityNumber <= 6) {
-                printGraphics("PassEmbark6");
+                printGraphics(graphicCodes[6]); // 6 - - // 6 5 6
                 printf("Is %d correct?\n", holder.priorityNumber);
                 validateUserInput(&isConfirmed, &isValidDetail[3], validationErrorMessage);
             }
@@ -973,10 +1013,10 @@ repeatGetPassenger(struct Passenger *pInput, struct Bus16 TripDatabase[], struct
             isConfirmed = FALSE;
             isValidRanges = TRUE;
             system("cls");
-            repeatGetInteger(&embarkationNum, "PassEmbark7", "\t Embarkation Point: ", "Please choose the number corresponding \n to where you are now.");
+            repeatGetInteger(&embarkationNum, graphicCodes[7], promptMessage[6], errorMessage[7]); // 7 6 7
 
             if (embarkationNum < 0 || embarkationNum > 1) {
-                printErrorMessage("Not a valid Embarkation selection.");
+                printErrorMessage(errorMessage[8]); // - - 8 // 7 6 8
                 isValidRanges = FALSE;
             } else {
                 if (embarkationNum == 0) 
@@ -987,10 +1027,10 @@ repeatGetPassenger(struct Passenger *pInput, struct Bus16 TripDatabase[], struct
 
             if (isValidRanges) {
                 system("cls");
-                repeatGetInteger(&routeNum, "PassEmbark8", "\t Embarkation Point: ", "Please choose the number corresponding to the route you want.");
+                repeatGetInteger(&routeNum, graphicCodes[8], promptMessage[7], errorMessage[9]); // 9 7 9
 
                 if (routeNum < 0 || routeNum > 3) {
-                    printErrorMessage("Not a valid Embarkation selection.");
+                    printErrorMessage(errorMessage[10]); // - - 10 // 9 7 10
                     isValidRanges = FALSE;
                 } else {
                     strcpy(holder.route, exits[routeNum].route);
@@ -999,10 +1039,10 @@ repeatGetPassenger(struct Passenger *pInput, struct Bus16 TripDatabase[], struct
 
             if (isValidRanges) {
                 system("cls");
-                repeatGetInteger(&dropOffNum, "PassEmbark9", "\t Route: ", "Please choose which drop off you want.");
+                repeatGetInteger(&dropOffNum, graphicCodes[9], promptMessage[8], errorMessage[11]);
 
                 if (dropOffNum < 0 || dropOffNum >= 13) {
-                    printErrorMessage("Not a valid Drop Off selection.");
+                    printErrorMessage(errorMessage[12]);
                     isValidRanges = FALSE;
                 } else {
                     strcpy(holder.dropOffPoint, strDropOffs[dropOffNum]);
