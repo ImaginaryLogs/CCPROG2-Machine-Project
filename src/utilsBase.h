@@ -3,7 +3,9 @@
  * [1] itoa():  https://www.ibm.com/docs/en/zos/2.1.0?topic=functions-itoa-convert-int-into-string
  * [2] atoi():  https://www.ibm.com/docs/en/i/7.4?topic=functions-atoi-convert-character-string-integer
  * [3] SetConsoleTextAttribute():   https://learn.microsoft.com/en-us/windows/console/setconsoletextattribute
- * [4] time and localtime of <time.h>
+ * [4] time.h: https://www.ibm.com/docs/en/zos/2.4.0?topic=files-timeh-time-date
+ * [5] localtime of <time.h>: https://www.ibm.com/docs/en/zos/2.4.0?topic=functions-localtime-localtime64-convert-time-correct-local-time
+ * 
  */
 
 #include <stdio.h>
@@ -39,7 +41,6 @@ typedef char String15[16];
 typedef char String7[8];
 typedef char String3[4];
 typedef char TripNo[7];
-
 typedef int ErrorInt;
 
 struct TimeHM {
@@ -117,11 +118,9 @@ clearInput(){
 void
 swapInt(int *nDEST, int *nSRCE){
     int temp;
-    printf("1");
     temp = *nSRCE;
     *nSRCE = *nDEST;
     *nDEST = temp;
-    printf("2");
 }
 
 /**
@@ -134,11 +133,9 @@ swapInt(int *nDEST, int *nSRCE){
 void
 swapStr(char *nDEST, char *nSRCE){
     String255 temp = "";
-    printf("3");
     strcpy(temp, nDEST);
     strcpy(nDEST, nSRCE);
     strcpy(nSRCE, temp);
-    printf("4");
 }
 
 /**
@@ -207,7 +204,7 @@ printPopUpMessage(char *headerString, int headerColor, char *bodyMessage){
 void
 printDate(struct DateDMY *date){
     String3 strMonths[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-    printf("%d, %s %d", date->day, strMonths[date->month - 1], date->year);
+    printf("%d %s %d", date->day, strMonths[date->month - 1], date->year);
 };
 
 /**
@@ -220,7 +217,7 @@ printDate(struct DateDMY *date){
 ErrorInt 
 printGraphics(char *graphicsID){
     String255 graphicsData = "";
-
+    
     String63 strErrorEndOfFile      = "PG Error: EOF. \n\tGraphics Not found.\n";
     String63 strErrorMisalign       = "PG Error: Misalignment. \n\tNext Graphics Metadata not found.\n";
     String63 strErrorFileNotFound   = "PG Error: File not found. \n\t\"ASCII_Art.txt\" not found.\n";
@@ -279,7 +276,7 @@ printGraphics(char *graphicsID){
         } else if (isSameGraphicId) {
             for (gLine = 0; gLine < graphicHeight; gLine++) {
                 fgets(graphicsData, 256, fileGraphics);
-                printf("%s", graphicsData);
+                printf("%ls", (graphicsData));
             }
         } else 
             haveNotFoundGraphic = TRUE; // Else, loop through again with the next graphic cell
@@ -414,6 +411,34 @@ GetTimeHmToday(){
 }
 
 /**
+ * @brief Prints the date and time today.
+ * @param  *dateOfFile: Date of File
+ * @param  isFileDateExist: if the File exist.
+ * @returns none
+ */
+void
+printTodayDateTime(struct DateDMY *dateOfFile, int isFileDateExist){
+    struct DateDMY dateOfToday;
+    struct TimeHM  timeOfNow;  
+    dateOfToday = GetDateToday();
+    timeOfNow = GetTimeHmToday();
+    printf("\n");
+    printf("	#>-----------------------------------------<#\n");
+    printf("	Y\n");
+    if (isFileDateExist){
+        printf("	|   File Date:     ");
+        printDate(dateOfFile);
+        printf("\n");
+    }
+    printf("	|   Date of today: ");
+    printDate(&dateOfToday);
+    printf("\n");
+    printf("	|   Time now:      %02d:%02d\n", timeOfNow.hour, timeOfNow.minute);
+    printf("        A\n");
+    printf("	#>-----------------------------------------<#\n\n");
+}
+
+/**
  * @brief If it sees a new line character at the end, then this function removes it.
  * @param *strInput: The string you want to modify
  * @return char pointer to the modified string. 
@@ -494,11 +519,11 @@ GetStringFromNameField(char *strName, struct NameField name){
         strcat(strName, ", ");
 
     strcat(strName, name.firstName);
-
+    
     if (name.midI != '\0') {
         strcat(strName, " ");
-        strName[strlen(strName) + 1] = '\0';
-        strName[strlen(strName)] = name.midI;
+        strName[(int) strlen(strName) + 1] = '\0';
+        strName[(int) strlen(strName)] = name.midI;
         strcat(strName, ".");
     }
 
@@ -536,11 +561,13 @@ GetNameFieldFromString(char *strName){
         if (hasSeenFirstName) {
             firstNameFlor = charIndex + 2; // Floor / first char of first name is two chars away from ',' 
             copySubstringFromString(output.lastName, strName, 0, charIndex);
+
         } else if (hasSeenMiddileInitial){
             output.midI = strName[charIndex - 1];
-            firstNameCeil = charIndex - 2; // Ceiling / last char of first name is two chars away from the middle initial.
+            firstNameCeil = charIndex - (int) strlen(output.lastName) - 4; // Ceiling / last char of first name is two chars away from the middle initial.
             copySubstringFromString(output.firstName, strName, firstNameFlor, firstNameCeil);
         } else if (hasNoMiddleInitial){
+
             output.midI = '\0';
             strcpy(output.firstName, strName + firstNameFlor);
         }
@@ -710,7 +737,7 @@ repeatGetChar(char *pInput, char choiceMenuGraphicsCode[], char promtMessage[], 
 void
 validateUserInput(int *isChoiceCertain, int *isChoiceValidByUser, char *validationErrorMessage){
 	String15 strGraphics 			= "None";
-	String15 strPrompt 				= "\t> [Y/N]: ";
+	String15 strPrompt 				= "\t\t> [Y/N]: ";
 	String31 strConfirmationError 	= "Enter a valid char.";
     char userValidation;
     repeatGetChar(&userValidation, strGraphics, strPrompt, strConfirmationError);
@@ -756,13 +783,14 @@ repeatGetDateDMY(struct DateDMY *pInput){
     char closingChar;
 
     while (isFindingDate) {
+        printTodayDateTime(pInput, FALSE);
         printGraphics(graphicCode);
 
         successfulInputs = 0;
         while (successfulInputs < 3) {
             switch (successfulInputs) {
                 case 0: // Year Section
-                    printf("\t> Enter Year: ");
+                    printf("\t\t> Enter Year: ");
                     returnedInputs = scanf("%d%c", &pInput->year, &closingChar);
 
                     if (pInput->year < 2000) 
@@ -772,7 +800,7 @@ repeatGetDateDMY(struct DateDMY *pInput){
                                         isValidYear;
                     break;
                 case 1: // Month Section
-                    printf("\t> Enter Month: ");
+                    printf("\t\t> Enter Month: ");
                     returnedInputs = scanf("%d%c", &pInput->month, &closingChar);
                     isValidMonth = pInput->month >= 1 && pInput->month < 13;
 
@@ -783,7 +811,7 @@ repeatGetDateDMY(struct DateDMY *pInput){
                                         isValidMonth;
                     break;
                 case 2: // Day Section
-                    printf("\t> Enter Day: ");
+                    printf("\t\t> Enter Day: ");
                     returnedInputs = scanf("%d%c", &pInput->day, &closingChar);
                     isValidDay = checkValidDate(pInput->year, pInput->month, pInput->day);
 
@@ -798,7 +826,8 @@ repeatGetDateDMY(struct DateDMY *pInput){
 
         isConfirming = FALSE;
         while (!isConfirming) {
-            printf("Should the date entered be: ");
+            system("cls");
+            printf("[*] Note:\n\tShould the date entered be: ");
             printDate(pInput);
             printf("?\n");
             validateUserInput(&isConfirming, &isFindingDate, validErrMessage);
