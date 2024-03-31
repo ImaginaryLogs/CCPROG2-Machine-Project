@@ -3,6 +3,6 @@
 int
 main(){
     struct TimeHM Time = GetTimeHmToday();
-    printf("Date: %02d %02d\n", Time.hour, Time.minute);
+    printf("Time: %02d %02d\n", Time.hour, Time.minute);
     return 0;
 }
