@@ -3,7 +3,9 @@
  * [1] itoa():  https://www.ibm.com/docs/en/zos/2.1.0?topic=functions-itoa-convert-int-into-string
  * [2] atoi():  https://www.ibm.com/docs/en/i/7.4?topic=functions-atoi-convert-character-string-integer
  * [3] SetConsoleTextAttribute():   https://learn.microsoft.com/en-us/windows/console/setconsoletextattribute
- * [4] time and localtime of <time.h>
+ * [4] time.h: https://www.ibm.com/docs/en/zos/2.4.0?topic=files-timeh-time-date
+ * [5] localtime of <time.h>: https://www.ibm.com/docs/en/zos/2.4.0?topic=functions-localtime-localtime64-convert-time-correct-local-time
+ * 
  */
 
 #include <stdio.h>
@@ -39,7 +41,6 @@ typedef char String15[16];
 typedef char String7[8];
 typedef char String3[4];
 typedef char TripNo[7];
-
 typedef int ErrorInt;
 
 struct TimeHM {
@@ -203,7 +204,7 @@ printPopUpMessage(char *headerString, int headerColor, char *bodyMessage){
 void
 printDate(struct DateDMY *date){
     String3 strMonths[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-    printf("%d, %s %d", date->day, strMonths[date->month - 1], date->year);
+    printf("%d %s %d", date->day, strMonths[date->month - 1], date->year);
 };
 
 /**
@@ -216,7 +217,7 @@ printDate(struct DateDMY *date){
 ErrorInt 
 printGraphics(char *graphicsID){
     String255 graphicsData = "";
-
+    
     String63 strErrorEndOfFile      = "PG Error: EOF. \n\tGraphics Not found.\n";
     String63 strErrorMisalign       = "PG Error: Misalignment. \n\tNext Graphics Metadata not found.\n";
     String63 strErrorFileNotFound   = "PG Error: File not found. \n\t\"ASCII_Art.txt\" not found.\n";
@@ -275,7 +276,7 @@ printGraphics(char *graphicsID){
         } else if (isSameGraphicId) {
             for (gLine = 0; gLine < graphicHeight; gLine++) {
                 fgets(graphicsData, 256, fileGraphics);
-                printf("%s", graphicsData);
+                printf("%ls", (graphicsData));
             }
         } else 
             haveNotFoundGraphic = TRUE; // Else, loop through again with the next graphic cell
@@ -410,6 +411,34 @@ GetTimeHmToday(){
 }
 
 /**
+ * @brief Prints the date and time today.
+ * @param  *dateOfFile: Date of File
+ * @param  isFileDateExist: if the File exist.
+ * @returns none
+ */
+void
+printTodayDateTime(struct DateDMY *dateOfFile, int isFileDateExist){
+    struct DateDMY dateOfToday;
+    struct TimeHM  timeOfNow;  
+    dateOfToday = GetDateToday();
+    timeOfNow = GetTimeHmToday();
+    printf("\n");
+    printf("	#>-----------------------------------------<#\n");
+    printf("	Y\n");
+    if (isFileDateExist){
+        printf("	|   File Date:     ");
+        printDate(dateOfFile);
+        printf("\n");
+    }
+    printf("	|   Date of today: ");
+    printDate(&dateOfToday);
+    printf("\n");
+    printf("	|   Time now:      %02d:%02d\n", timeOfNow.hour, timeOfNow.minute);
+    printf("        A\n");
+    printf("	#>-----------------------------------------<#\n\n");
+}
+
+/**
  * @brief If it sees a new line character at the end, then this function removes it.
  * @param *strInput: The string you want to modify
  * @return char pointer to the modified string. 
@@ -490,11 +519,11 @@ GetStringFromNameField(char *strName, struct NameField name){
         strcat(strName, ", ");
 
     strcat(strName, name.firstName);
-
+    
     if (name.midI != '\0') {
         strcat(strName, " ");
-        strName[strlen(strName) + 1] = '\0';
-        strName[strlen(strName)] = name.midI;
+        strName[(int) strlen(strName) + 1] = '\0';
+        strName[(int) strlen(strName)] = name.midI;
         strcat(strName, ".");
     }
 
@@ -517,7 +546,7 @@ GetNameFieldFromString(char *strName){
     int firstNameCeil   = 0;
     int firstNameFlor   = 0;
 
-    for(charIndex = 0; charIndex < strlen(strName) ; charIndex++){
+    for(charIndex = 0; charIndex < (int) strlen(strName) ; charIndex++){
         // Ceiling of last name section
         hasSeenFirstName = strName[charIndex] == ','; 
         // Ceiling of middle initial
@@ -526,17 +555,19 @@ GetNameFieldFromString(char *strName){
          * Remember that the index starts at 0. So the index's ranges from 0 to strlen - 1, 
          * so Offset by 1 to make it from 1 to strlen.
         */
-        hasNoMiddleInitial = charIndex + 1 == strlen(strName) && 
+        hasNoMiddleInitial = charIndex + 1 == (int) strlen(strName) && 
                              strName[charIndex] != '.'; 
             
         if (hasSeenFirstName) {
             firstNameFlor = charIndex + 2; // Floor / first char of first name is two chars away from ',' 
             copySubstringFromString(output.lastName, strName, 0, charIndex);
+
         } else if (hasSeenMiddileInitial){
             output.midI = strName[charIndex - 1];
-            firstNameCeil = charIndex - 2; // Ceiling / last char of first name is two chars away from the middle initial.
+            firstNameCeil = charIndex - (int) strlen(output.lastName) - 4; // Ceiling / last char of first name is two chars away from the middle initial.
             copySubstringFromString(output.firstName, strName, firstNameFlor, firstNameCeil);
         } else if (hasNoMiddleInitial){
+
             output.midI = '\0';
             strcpy(output.firstName, strName + firstNameFlor);
         }
@@ -562,7 +593,7 @@ isStringTripNo(char *inputString){
     int isSecondNumber      = TRUE;
     int i = 0;
     
-    if (strlen(inputString) > 6 || strlen(inputString) < 5 || inputString[5] != '\n' && inputString[5] != '\0')
+    if (strlen(inputString) > 6 || strlen(inputString) < 5 || (inputString[5] != '\n' && inputString[5] != '\0'))
         return isTripNo;
     
     copySubstringFromString(tripCodePart, inputString, 0, 2);
@@ -704,9 +735,12 @@ repeatGetChar(char *pInput, char choiceMenuGraphicsCode[], char promtMessage[], 
  * @param *validationErrorMessage: error if the choice is not in the given
  */
 void
-validateUserInput(int *isChoiceCertain, int *isChoiceValidByUser, char * validationErrorMessage){
+validateUserInput(int *isChoiceCertain, int *isChoiceValidByUser, char *validationErrorMessage){
+	String15 strGraphics 			= "None";
+	String15 strPrompt 				= "\t\t> [Y/N]: ";
+	String31 strConfirmationError 	= "Enter a valid char.";
     char userValidation;
-    repeatGetChar(&userValidation, "None", "\t> [Y/N]: ", "Enter a valid char.");
+    repeatGetChar(&userValidation, strGraphics, strPrompt, strConfirmationError);
     switch(userValidation){
         case 'Y':
         case 'y':
@@ -730,7 +764,11 @@ repeatGetDateDMY(struct DateDMY *pInput){
     // Error Messages
     String63 typeErrMessage     = "Please input the correct format.";
     String63 validErrMessage    = "Please enter either Y or N only.";
-
+    String63 promptYear 		= "Enter a recent year after 2000.";
+	String63 promptMonth		= "Enter a valid month.";
+	String63 promptDay			= "Enter a valid day.";
+	String15 graphicCode 		= "EnterDate";
+	
     // Boolean Conditions
     int isFindingDate   = TRUE;
     int isValidDay      = FALSE;
@@ -742,43 +780,43 @@ repeatGetDateDMY(struct DateDMY *pInput){
     int returnedInputs      = 0;
 
     // User inputs
-    char userValidation; 
     char closingChar;
 
     while (isFindingDate) {
-        printGraphics("EnterDate");
+        printTodayDateTime(pInput, FALSE);
+        printGraphics(graphicCode);
 
         successfulInputs = 0;
         while (successfulInputs < 3) {
             switch (successfulInputs) {
                 case 0: // Year Section
-                    printf("\t> Enter Year: ");
+                    printf("\t\t> Enter Year: ");
                     returnedInputs = scanf("%d%c", &pInput->year, &closingChar);
 
                     if (pInput->year < 2000) 
-                        printErrorMessage("Enter a recent year after 2000.");
+                        printErrorMessage(promptYear);
                     isValidYear = pInput->year >= 2000;
                     successfulInputs += isInputSuccesful(returnedInputs, closingChar, typeErrMessage) &&
                                         isValidYear;
                     break;
                 case 1: // Month Section
-                    printf("\t> Enter Month: ");
+                    printf("\t\t> Enter Month: ");
                     returnedInputs = scanf("%d%c", &pInput->month, &closingChar);
                     isValidMonth = pInput->month >= 1 && pInput->month < 13;
 
                     if (!isValidMonth) 
-                        printErrorMessage("Enter a valid month.");
+                        printErrorMessage(promptMonth);
 
                     successfulInputs += isInputSuccesful(returnedInputs, closingChar, typeErrMessage) &&
                                         isValidMonth;
                     break;
                 case 2: // Day Section
-                    printf("\t> Enter Day: ");
+                    printf("\t\t> Enter Day: ");
                     returnedInputs = scanf("%d%c", &pInput->day, &closingChar);
                     isValidDay = checkValidDate(pInput->year, pInput->month, pInput->day);
 
                     if (!isValidDay) 
-                        printErrorMessage("Enter a valid day.");
+                        printErrorMessage(promptDay);
 
                     successfulInputs += isInputSuccesful(returnedInputs, closingChar, typeErrMessage) &&
                                         isValidDay;
@@ -788,7 +826,8 @@ repeatGetDateDMY(struct DateDMY *pInput){
 
         isConfirming = FALSE;
         while (!isConfirming) {
-            printf("Should the date entered be: ");
+            system("cls");
+            printf("[*] Note:\n\tShould the date entered be: ");
             printDate(pInput);
             printf("?\n");
             validateUserInput(&isConfirming, &isFindingDate, validErrMessage);
@@ -814,7 +853,6 @@ repeatGetTripNo(char *pInput, char choiceMenuGraphicsCode[], char *promtMessage,
     
     int isWithinRange   = FALSE;
     int isValidTripCode = FALSE;
-    int typeReturned    = 0;
     int TripNumber      = 0;
 
     do {
@@ -838,13 +876,4 @@ repeatGetTripNo(char *pInput, char choiceMenuGraphicsCode[], char *promtMessage,
     } while(!isValidTripCode);
 }
 
-/********************************************************************************************************* 
- * This is to certify that this project is our own work, based on our personal efforts in studying and 
- * applying the concepts learned. We have constructed the functions and their respective algorithms and 
- * corresponding code by ourselves. The program was run, tested, and debugged by our own efforts. 
- * 
- * We further certify that we have not copied in part or whole or otherwise plagiarized the work of 
- * other students and/or persons. 
- *                                                      ROAN CEDRIC V. CAMPO,           DLSU ID# 12305936
- *                                                      WANDA JUDE R. DE LA CALZADA,    DLSU ID# 12305669
-*********************************************************************************************************/
+
