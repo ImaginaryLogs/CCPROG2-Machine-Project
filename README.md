@@ -1,4 +1,4 @@
-# CCPROG2 Machine-Project
+# CCPROG2 Machine-Project - Ticket System
 ![Static Badge](https://img.shields.io/badge/AY2324--T2-CCPROG2-yellow)
 
 A Programming with Structured Data Types MCO.
